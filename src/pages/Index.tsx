@@ -1,13 +1,33 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageCircle, Heart } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { MadeWithDyad } from "@/components/made-with-dyad";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [lastMessage, setLastMessage] = useState<string>("I'm so happy you're here!");
+
+  useEffect(() => {
+    const fetchLastMessage = async () => {
+      // Fetch the latest message from Karouko to display on the home screen
+      const { data, error } = await supabase
+        .from('messages')
+        .select('text')
+        .eq('is_user', false)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (!error && data && data.length > 0) {
+        setLastMessage(data[0].text);
+      }
+    };
+
+    fetchLastMessage();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FFF9F9] flex flex-col items-center justify-center p-6">
@@ -38,9 +58,11 @@ const Index = () => {
           <span>Start Talking</span>
         </Button>
 
-        <p className="text-slate-400 text-sm italic">
-          "I'm so happy you're here!"
-        </p>
+        <div className="px-4">
+          <p className="text-slate-400 text-sm italic line-clamp-2">
+            "{lastMessage}"
+          </p>
+        </div>
       </div>
 
       <div className="mt-auto">
