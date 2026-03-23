@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost, Clock } from 'lucide-react';
+import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost, Clock, CalendarDays, Trash2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
@@ -32,7 +32,7 @@ const GIFTS = [
   { emoji: "👻", label: "Spooky Friend", icon: <Ghost className="w-5 h-5 text-slate-400" /> },
 ];
 
-const SCHEDULE = [
+const STATIC_SCHEDULE = [
   { time: "00:00 - 07:00", activity: "Sleeping 🌙", color: "text-slate-400" },
   { time: "08:00 - 15:00", activity: "At School 🏫", color: "text-amber-500" },
   { time: "15:00 - 18:00", activity: "Baking 🍰", color: "text-rose-500" },
@@ -47,6 +47,7 @@ const Chat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [currentStatus, setCurrentStatus] = useState({ text: "Online", color: "bg-green-500", subtext: "Active now" });
+  const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Dynamic Status Logic
@@ -72,7 +73,7 @@ const Chat = () => {
     };
 
     updateStatus();
-    const interval = setInterval(updateStatus, 30000); // Update every 30 seconds
+    const interval = setInterval(updateStatus, 30000);
     return () => clearInterval(interval);
   }, [isTyping]);
 
@@ -81,14 +82,15 @@ const Chat = () => {
       setNotificationsEnabled(Notification.permission === 'granted');
     }
 
-    const fetchMessages = async () => {
-      const { data } = await supabase
+    const fetchData = async () => {
+      // Fetch Messages
+      const { data: msgData } = await supabase
         .from('messages')
         .select('*')
         .order('created_at', { ascending: true });
       
-      if (data && data.length > 0) {
-        setMessages(data.map(m => ({
+      if (msgData && msgData.length > 0) {
+        setMessages(msgData.map(m => ({
           id: m.id,
           text: m.text,
           isUser: m.is_user,
@@ -104,11 +106,19 @@ const Chat = () => {
           status: 'read'
         }]);
       }
+
+      // Fetch Planned Events
+      const { data: eventData } = await supabase
+        .from('planned_events')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (eventData) setPlannedEvents(eventData);
     };
 
-    fetchMessages();
+    fetchData();
 
-    const channel = supabase
+    const msgChannel = supabase
       .channel('public:messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
         const newMessage = payload.new;
@@ -125,8 +135,17 @@ const Chat = () => {
       })
       .subscribe();
 
+    const eventChannel = supabase
+      .channel('public:planned_events')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'planned_events' }, () => {
+        supabase.from('planned_events').select('*').order('created_at', { ascending: false })
+          .then(({ data }) => { if (data) setPlannedEvents(data); });
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(msgChannel);
+      supabase.removeChannel(eventChannel);
     };
   }, []);
 
@@ -145,17 +164,7 @@ const Chat = () => {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       setNotificationsEnabled(true);
-      
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.register('/sw.js');
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: 'BEl69_W69696969696969696969696969696969696969696969696969696969696969696969696969696969' // Placeholder VAPID
-        });
-
-        await supabase.from('push_subscriptions').insert([{ subscription }]);
-        showSuccess("Karouko can now reach you anytime! 🌸");
-      }
+      showSuccess("Karouko can now reach you anytime! 🌸");
     } else {
       showError("Notifications were denied.");
     }
@@ -195,6 +204,11 @@ const Chat = () => {
     const message = `I brought you this: ${gift.emoji} (${gift.label})! I hope you like it. 🌸`;
     handleSend(message);
     showSuccess(`You gave Karouko a ${gift.label}!`);
+  };
+
+  const deleteEvent = async (id: string) => {
+    await supabase.from('planned_events').delete().eq('id', id);
+    showSuccess("Event removed from schedule.");
   };
 
   const clearChat = async () => {
@@ -247,12 +261,39 @@ const Chat = () => {
               </SheetHeader>
               
               <div className="mt-8 space-y-6 px-2">
+                {/* Planned Events Section */}
+                {plannedEvents.length > 0 && (
+                  <div className="bg-rose-500 p-4 rounded-2xl shadow-lg shadow-rose-200 border border-rose-400 text-white">
+                    <h4 className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center">
+                      <CalendarDays className="w-3 h-3 mr-1.5" /> Important Events
+                    </h4>
+                    <div className="space-y-3">
+                      {plannedEvents.map((event) => (
+                        <div key={event.id} className="bg-white/10 p-2 rounded-xl relative group">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="text-sm font-bold">{event.title}</p>
+                              <p className="text-[10px] opacity-80">{event.event_time}</p>
+                            </div>
+                            <button 
+                              onClick={() => deleteEvent(event.id)}
+                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20 rounded-lg"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-rose-50">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center">
                     <Clock className="w-3 h-3 mr-1.5" /> Daily Schedule
                   </h4>
                   <div className="space-y-3">
-                    {SCHEDULE.map((item) => (
+                    {STATIC_SCHEDULE.map((item) => (
                       <div key={item.time} className="flex items-center justify-between text-xs">
                         <span className="text-slate-400 font-medium">{item.time}</span>
                         <span className={cn("font-bold", item.color)}>{item.activity}</span>
