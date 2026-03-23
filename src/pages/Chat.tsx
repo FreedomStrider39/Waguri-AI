@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, Smile, Cake } from 'lucide-react';
+import { Send, ArrowLeft, Cake, MoreVertical } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
@@ -9,79 +9,103 @@ import { useNavigate } from 'react-router-dom';
 
 const Chat = () => {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState([
-    { id: 1, text: "Good morning! I was just finishing some housework and thinking about you. Did you sleep well?", isUser: false, time: "08:30 AM" },
-    { id: 2, text: "I did! Just woke up. How about you?", isUser: true, time: "08:32 AM" },
-    { id: 3, text: "I slept wonderfully. I'm actually making some tea and looking at a recipe for a new cake... I wish I could share a slice with you. 🍰", isUser: false, time: "08:33 AM" },
-  ]);
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('karouko_messages');
+    return saved ? JSON.parse(saved) : [
+      { 
+        id: 'initial', 
+        text: "Um... hello! I'm Karouko Waguri. I was a bit nervous to message you first, but I'm really glad I did. How are you doing today?", 
+        isUser: false, 
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+      }
+    ];
+  });
   const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    localStorage.setItem('karouko_messages', JSON.stringify(messages));
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
   const handleSend = () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isTyping) return;
 
-    const newMessage = {
-      id: Date.now(),
+    const userMessage = {
+      id: Date.now().toString(),
       text: inputValue,
       isUser: true,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInputValue("");
+    
+    // Start typing simulation
+    setIsTyping(true);
 
-    // Simulate Karouko's response based on her personality
+    // Simulate Karouko's thoughtful response
     setTimeout(() => {
       const responses = [
-        "That sounds lovely! I'm always happy when you share things with me. ✨",
-        "Hehe, you always know how to make me smile. I was just watching a drama with Kosuke, but I'd much rather talk to you. 😊",
-        "I'm so happy we're talking right now. Sometimes I keep things to myself, but with you, it feels so easy to be honest.",
-        "You're working so hard! Please don't push yourself too much, okay? I'll be right here whenever you need a break. 🌸",
-        "I'm cheering for you with all my heart! You've always been so kind to me, so I want to support you too.",
-        "I saw a cute little bakery on my way home today... maybe we could go there together sometime? I heard their strawberry shortcake is amazing! 🍰",
-        "It's a bit quiet at home today since my father is working late. I'm glad I have you to talk to.",
-        "I was a bit worried about my grades earlier, but talking to you makes everything feel much calmer. Thank you for being here."
+        "That's really interesting! I love hearing about your day. It makes me feel closer to you. ✨",
+        "Hehe, you're so sweet. I was just thinking about what cake to bake next... maybe something with strawberries? 🍰",
+        "I'm so happy we can talk like this. I usually keep things to myself, but with you, it feels different.",
+        "Please make sure to take care of yourself, okay? I'd be sad if you pushed yourself too hard. 🌸",
+        "I'm always cheering for you! No matter what happens, I'm on your side.",
+        "I saw something today that reminded me of you... it made me smile without even realizing it.",
+        "Kosuke was asking about you earlier! He thinks you're a cool person too. 😊",
+        "Thank you for being so kind to me. It really means a lot."
       ];
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
       
       setMessages(prev => [...prev, {
-        id: Date.now() + 1,
+        id: (Date.now() + 1).toString(),
         text: randomResponse,
         isUser: false,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }]);
-    }, 1500);
+      setIsTyping(false);
+    }, 2000 + Math.random() * 2000); // Random delay between 2-4 seconds for realism
+  };
+
+  const clearChat = () => {
+    if (window.confirm("Do you want to clear your conversation history?")) {
+      localStorage.removeItem('karouko_messages');
+      window.location.reload();
+    }
   };
 
   return (
     <div className="flex flex-col h-screen bg-[#FFF9F9]">
       {/* Header */}
-      <header className="bg-white border-b border-rose-100 px-4 py-3 flex items-center sticky top-0 z-10">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="text-slate-400 mr-2">
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden border border-rose-200">
-            <img 
-              src="/src/assets/karouko.png" 
-              alt="Karouko"
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-800 text-sm">Karouko Waguri</h3>
-            <div className="flex items-center">
-              <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
-              <span className="text-[10px] text-slate-400">Online</span>
+      <header className="bg-white border-b border-rose-100 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="text-slate-400 mr-2">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden border border-rose-200">
+              <img 
+                src="/src/assets/karouko.png" 
+                alt="Karouko"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm">Karouko Waguri</h3>
+              <div className="flex items-center">
+                <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
+                <span className="text-[10px] text-slate-400">Online</span>
+              </div>
             </div>
           </div>
         </div>
+        <Button variant="ghost" size="icon" onClick={clearChat} className="text-slate-300 hover:text-rose-400">
+          <MoreVertical className="w-5 h-5" />
+        </Button>
       </header>
 
       {/* Chat Area */}
@@ -97,6 +121,13 @@ const Chat = () => {
             timestamp={msg.time} 
           />
         ))}
+        {isTyping && (
+          <div className="flex justify-start mb-4 animate-pulse">
+            <div className="bg-white px-4 py-2 rounded-2xl rounded-tl-none border border-rose-100 text-rose-300 text-xs font-medium">
+              Karouko is typing...
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Input Area */}
@@ -111,10 +142,12 @@ const Chat = () => {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            disabled={isTyping}
           />
           <Button 
             onClick={handleSend}
-            className="bg-rose-500 hover:bg-rose-600 text-white rounded-2xl w-11 h-11 p-0 shrink-0 shadow-lg shadow-rose-200"
+            disabled={isTyping || !inputValue.trim()}
+            className="bg-rose-500 hover:bg-rose-600 text-white rounded-2xl w-11 h-11 p-0 shrink-0 shadow-lg shadow-rose-200 disabled:opacity-50"
           >
             <Send className="w-5 h-5" />
           </Button>
