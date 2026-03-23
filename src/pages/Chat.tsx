@@ -35,9 +35,11 @@ const GIFTS = [
 const STATIC_SCHEDULE = [
   { time: "00:00 - 07:00", activity: "Sleeping 🌙", color: "text-slate-400" },
   { time: "08:00 - 15:00", activity: "At School 🏫", color: "text-amber-500" },
+  { time: "10:30 - 10:50", activity: "Short Break ☕", color: "text-rose-400" },
+  { time: "12:30 - 13:20", activity: "Lunch Break 🍱", color: "text-rose-500" },
   { time: "15:00 - 18:00", activity: "Baking 🍰", color: "text-rose-500" },
-  { time: "18:00 - 22:00", activity: "Studying 📖", color: "text-blue-500" },
-  { time: "22:00 - 00:00", activity: "Relaxing ✨", color: "text-purple-500" },
+  { time: "18:00 - 21:00", activity: "Studying 📖", color: "text-blue-500" },
+  { time: "21:00 - 00:00", activity: "Relaxing ✨", color: "text-purple-500" },
 ];
 
 const Chat = () => {
@@ -45,7 +47,6 @@ const Chat = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [currentStatus, setCurrentStatus] = useState({ text: "Online", color: "bg-green-500", subtext: "Active now" });
   const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -58,14 +59,24 @@ const Chat = () => {
         return;
       }
 
-      const hour = new Date().getHours();
-      if (hour >= 0 && hour < 7) {
+      const now = new Date();
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+      const timeValue = hour * 100 + minute;
+
+      if (timeValue >= 0 && timeValue < 700) {
         setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-300", subtext: "Last seen 5m ago" });
-      } else if (hour >= 8 && hour < 15) {
-        setCurrentStatus({ text: "At School 🏫", color: "bg-amber-400", subtext: "In class" });
-      } else if (hour >= 15 && hour < 18) {
+      } else if (timeValue >= 800 && timeValue < 1500) {
+        if (timeValue >= 1030 && timeValue < 1050) {
+          setCurrentStatus({ text: "On Break ☕", color: "bg-rose-400", subtext: "Quick reply" });
+        } else if (timeValue >= 1230 && timeValue < 1320) {
+          setCurrentStatus({ text: "Lunch Break 🍱", color: "bg-rose-500", subtext: "Eating lunch" });
+        } else {
+          setCurrentStatus({ text: "In Class 🏫", color: "bg-amber-400", subtext: "Busy" });
+        }
+      } else if (timeValue >= 1500 && timeValue < 1800) {
         setCurrentStatus({ text: "Baking 🍰", color: "bg-green-500", subtext: "Active now" });
-      } else if (hour >= 18 && hour < 22) {
+      } else if (timeValue >= 1800 && timeValue < 2100) {
         setCurrentStatus({ text: "Studying 📖", color: "bg-green-500", subtext: "Focused" });
       } else {
         setCurrentStatus({ text: "Relaxing ✨", color: "bg-green-500", subtext: "Active now" });
@@ -279,7 +290,7 @@ const Chat = () => {
       </div>
 
       <div className="p-4 bg-white border-t border-rose-100 pb-8">
-        {currentStatus.text.includes("Sleeping") || currentStatus.text.includes("School") ? (
+        {currentStatus.text.includes("Sleeping") || currentStatus.text.includes("Class") ? (
           <div className="text-center mb-3 animate-pulse">
             <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest">
               Karouko is {currentStatus.text.toLowerCase()}... she might reply later.
