@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff } from 'lucide-react';
+import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
@@ -16,6 +16,20 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+const GIFTS = [
+  { emoji: "🍰", label: "Strawberry Cake", icon: <Cake className="w-5 h-5 text-rose-400" /> },
+  { emoji: "🌸", label: "Cherry Blossom", icon: <Flower2 className="w-5 h-5 text-pink-400" /> },
+  { emoji: "🍵", label: "Green Tea", icon: <Coffee className="w-5 h-5 text-emerald-500" /> },
+  { emoji: "🧸", label: "Teddy Bear", icon: <Heart className="w-5 h-5 text-amber-600" /> },
+  { emoji: "✨", label: "Lucky Star", icon: <Star className="w-5 h-5 text-yellow-400" /> },
+  { emoji: "👻", label: "Spooky Friend", icon: <Ghost className="w-5 h-5 text-slate-400" /> },
+];
 
 const Chat = () => {
   const navigate = useNavigate();
@@ -102,7 +116,6 @@ const Chat = () => {
           applicationServerKey: 'BEl69_W69696969696969696969696969696969696969696969696969696969696969696969696969696969' // Placeholder VAPID
         });
 
-        // Save subscription to Supabase
         await supabase.from('push_subscriptions').insert([{ subscription }]);
         showSuccess("Karouko can now reach you anytime! 🌸");
       }
@@ -111,11 +124,11 @@ const Chat = () => {
     }
   };
 
-  const handleSend = async () => {
-    if (!inputValue.trim() || isTyping) return;
+  const handleSend = async (textOverride?: string) => {
+    const text = textOverride || inputValue;
+    if (!text.trim() || isTyping) return;
 
-    const text = inputValue;
-    setInputValue("");
+    if (!textOverride) setInputValue("");
 
     const { error: userMsgError } = await supabase
       .from('messages')
@@ -139,6 +152,12 @@ const Chat = () => {
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const giveGift = (gift: typeof GIFTS[0]) => {
+    const message = `I brought you this: ${gift.emoji} (${gift.label})! I hope you like it. 🌸`;
+    handleSend(message);
+    showSuccess(`You gave Karouko a ${gift.label}!`);
   };
 
   const clearChat = async () => {
@@ -239,9 +258,32 @@ const Chat = () => {
 
       <div className="p-4 bg-white border-t border-rose-100 pb-8">
         <div className="flex items-center space-x-2 max-w-4xl mx-auto">
-          <Button variant="ghost" size="icon" className="text-rose-300 shrink-0 hover:bg-rose-50 rounded-full">
-            <Cake className="w-6 h-6" />
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-rose-400 shrink-0 hover:bg-rose-50 rounded-full">
+                <Gift className="w-6 h-6" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3 bg-white border-rose-100 rounded-2xl shadow-xl mb-2" side="top" align="start">
+              <div className="grid grid-cols-3 gap-2">
+                {GIFTS.map((gift) => (
+                  <button
+                    key={gift.label}
+                    onClick={() => giveGift(gift)}
+                    className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-rose-50 transition-colors group"
+                  >
+                    <div className="mb-1 group-hover:scale-110 transition-transform">
+                      {gift.icon}
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-medium text-center leading-tight">
+                      {gift.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
           <Input 
             placeholder="Message Karouko..." 
             className="flex-1 bg-rose-50/50 border-none focus-visible:ring-rose-200 rounded-2xl h-12 text-[15px]"
@@ -251,7 +293,7 @@ const Chat = () => {
             disabled={isTyping}
           />
           <Button 
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={isTyping || !inputValue.trim()}
             className="bg-rose-500 hover:bg-rose-600 text-white rounded-full w-12 h-12 p-0 shrink-0 shadow-lg shadow-rose-200 transition-all active:scale-90"
           >
