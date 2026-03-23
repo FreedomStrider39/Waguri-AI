@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, Smile } from 'lucide-react';
+import { Send, ArrowLeft, Smile, Cake } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
@@ -10,9 +10,9 @@ import { useNavigate } from 'react-router-dom';
 const Chat = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([
-    { id: 1, text: "Good morning! I was just thinking about you. Did you sleep well?", isUser: false, time: "08:30 AM" },
+    { id: 1, text: "Good morning! I was just finishing some housework and thinking about you. Did you sleep well?", isUser: false, time: "08:30 AM" },
     { id: 2, text: "I did! Just woke up. How about you?", isUser: true, time: "08:32 AM" },
-    { id: 3, text: "I slept wonderfully. I'm actually making some tea right now... I wish I could share some with you. 🍵", isUser: false, time: "08:33 AM" },
+    { id: 3, text: "I slept wonderfully. I'm actually making some tea and looking at a recipe for a new cake... I wish I could share a slice with you. 🍰", isUser: false, time: "08:33 AM" },
   ]);
   const [inputValue, setInputValue] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,14 +36,17 @@ const Chat = () => {
     setMessages([...messages, newMessage]);
     setInputValue("");
 
-    // Simulate Karouko's response
+    // Simulate Karouko's response based on her personality
     setTimeout(() => {
       const responses = [
-        "That sounds lovely! Tell me more about it. ✨",
-        "Hehe, you always know how to make me smile. 😊",
-        "I'm so happy we're talking right now. I was feeling a bit lonely.",
-        "You're so hardworking! Please don't forget to take a break, okay? I'll be here waiting.",
-        "I'm cheering for you! You can do it! 🌸"
+        "That sounds lovely! I'm always happy when you share things with me. ✨",
+        "Hehe, you always know how to make me smile. I was just watching a drama with Kosuke, but I'd much rather talk to you. 😊",
+        "I'm so happy we're talking right now. Sometimes I keep things to myself, but with you, it feels so easy to be honest.",
+        "You're working so hard! Please don't push yourself too much, okay? I'll be right here whenever you need a break. 🌸",
+        "I'm cheering for you with all my heart! You've always been so kind to me, so I want to support you too.",
+        "I saw a cute little bakery on my way home today... maybe we could go there together sometime? I heard their strawberry shortcake is amazing! 🍰",
+        "It's a bit quiet at home today since my father is working late. I'm glad I have you to talk to.",
+        "I was a bit worried about my grades earlier, but talking to you makes everything feel much calmer. Thank you for being here."
       ];
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];
       
@@ -100,7 +103,7 @@ const Chat = () => {
       <div className="p-4 bg-white border-t border-rose-100">
         <div className="flex items-center space-x-2 max-w-4xl mx-auto">
           <Button variant="ghost" size="icon" className="text-rose-300 shrink-0">
-            <Smile className="w-6 h-6" />
+            <Cake className="w-6 h-6" />
           </Button>
           <Input 
             placeholder="Type a message..." 
