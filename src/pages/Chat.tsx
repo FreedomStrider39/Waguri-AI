@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart } from 'lucide-react';
+import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
+import { showSuccess, showError } from "@/utils/toast";
 import {
   Sheet,
   SheetContent,
@@ -21,12 +22,17 @@ const Chat = () => {
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch initial messages
   useEffect(() => {
+    // Check notification status
+    if ('Notification' in window) {
+      setNotificationsEnabled(Notification.permission === 'granted');
+    }
+
     const fetchMessages = async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('messages')
         .select('*')
         .order('created_at', { ascending: true });
@@ -40,7 +46,6 @@ const Chat = () => {
           status: m.status
         })));
       } else {
-        // Initial greeting if no history
         setMessages([{ 
           id: 'initial', 
           text: "Um... hello! I'm Karouko Waguri. I was a bit nervous to message you first, but I'm really glad I did. How are you doing today?", 
@@ -53,7 +58,6 @@ const Chat = () => {
 
     fetchMessages();
 
-    // Subscribe to new messages
     const channel = supabase
       .channel('public:messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
@@ -82,42 +86,49 @@ const Chat = () => {
     }
   }, [messages, isTyping]);
 
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      showError("This browser doesn't support notifications.");
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      setNotificationsEnabled(true);
+      showSuccess("Karouko can now reach you anytime! 🌸");
+      
+      // Register Service Worker
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+      }
+    } else {
+      showError("Notifications were denied.");
+    }
+  };
+
   const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
 
     const text = inputValue;
     setInputValue("");
 
-    // 1. Insert user message to Supabase
-    const { data: userMsgData, error: userMsgError } = await supabase
+    const { error: userMsgError } = await supabase
       .from('messages')
-      .insert([{ text, is_user: true, status: 'sent' }])
-      .select()
-      .single();
+      .insert([{ text, is_user: true, status: 'sent' }]);
 
     if (userMsgError) return;
 
-    // 2. Trigger typing indicator
     setIsTyping(true);
 
-    // 3. Call Edge Function for Karouko's response
     try {
       const response = await fetch('https://ztnnmgnoschgreqsodfq.supabase.co/functions/v1/karouko-chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabase.auth.getSession()}` // Optional if public
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, history: messages.slice(-5) })
       });
 
       const data = await response.json();
-      
-      // 4. Insert Karouko's response to Supabase
-      await supabase
-        .from('messages')
-        .insert([{ text: data.reply, is_user: false, status: 'read' }]);
-
+      await supabase.from('messages').insert([{ text: data.reply, is_user: false, status: 'read' }]);
     } catch (error) {
       console.error("Failed to get response:", error);
     } finally {
@@ -135,7 +146,6 @@ const Chat = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#FFF9F9]">
-      {/* Header */}
       <header className="bg-white border-b border-rose-100 px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div className="flex items-center">
           <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="text-slate-400 mr-1">
@@ -147,11 +157,7 @@ const Chat = () => {
               <button className="flex items-center space-x-3 hover:bg-rose-50 p-1 rounded-xl transition-colors text-left">
                 <div className="relative">
                   <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden border border-rose-200">
-                    <img 
-                      src="/src/assets/karouko.png" 
-                      alt="Karouko"
-                      className="w-full h-full object-cover"
-                    />
+                    <img src="/src/assets/karouko.png" alt="Karouko" className="w-full h-full object-cover" />
                   </div>
                   <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                 </div>
@@ -172,23 +178,19 @@ const Chat = () => {
                 </SheetDescription>
               </SheetHeader>
               <div className="mt-8 space-y-6 px-2">
+                <Button 
+                  variant={notificationsEnabled ? "outline" : "default"}
+                  className={notificationsEnabled ? "w-full border-rose-200 text-rose-400" : "w-full bg-rose-500 hover:bg-rose-600"}
+                  onClick={requestNotificationPermission}
+                >
+                  {notificationsEnabled ? <BellOff className="w-4 h-4 mr-2" /> : <Bell className="w-4 h-4 mr-2" />}
+                  {notificationsEnabled ? "Notifications On" : "Enable Notifications"}
+                </Button>
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-rose-50">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">About Me</h4>
                   <p className="text-sm text-slate-600 leading-relaxed">
                     I love baking cakes, reading, and spending time with my family. I'm a bit shy at first, but I'm trying my best to be more open!
                   </p>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white p-3 rounded-2xl shadow-sm border border-rose-50 text-center">
-                    <Cake className="w-5 h-5 text-rose-400 mx-auto mb-1" />
-                    <span className="text-[10px] text-slate-400 block">Loves</span>
-                    <span className="text-xs font-bold text-slate-700">Sweets</span>
-                  </div>
-                  <div className="bg-white p-3 rounded-2xl shadow-sm border border-rose-50 text-center">
-                    <Heart className="w-5 h-5 text-rose-400 mx-auto mb-1" />
-                    <span className="text-[10px] text-slate-400 block">Birthday</span>
-                    <span className="text-xs font-bold text-slate-700">July 22</span>
-                  </div>
                 </div>
               </div>
             </SheetContent>
@@ -196,8 +198,13 @@ const Chat = () => {
         </div>
         
         <div className="flex items-center space-x-1">
-          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-rose-400">
-            <Info className="w-5 h-5" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={requestNotificationPermission}
+            className={notificationsEnabled ? "text-rose-400" : "text-slate-300"}
+          >
+            {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
           </Button>
           <Button variant="ghost" size="icon" onClick={clearChat} className="text-slate-300 hover:text-rose-400">
             <MoreVertical className="w-5 h-5" />
@@ -205,25 +212,13 @@ const Chat = () => {
         </div>
       </header>
 
-      {/* Chat Area */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed opacity-90"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed opacity-90">
         <div className="text-center my-6">
-          <span className="bg-rose-100/50 text-rose-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
-            Today
-          </span>
+          <span className="bg-rose-100/50 text-rose-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Today</span>
         </div>
         
         {messages.map((msg) => (
-          <ChatBubble 
-            key={msg.id} 
-            message={msg.text} 
-            isUser={msg.isUser} 
-            timestamp={msg.time}
-            status={msg.status}
-          />
+          <ChatBubble key={msg.id} message={msg.text} isUser={msg.isUser} timestamp={msg.time} status={msg.status} />
         ))}
         
         {isTyping && (
@@ -237,7 +232,6 @@ const Chat = () => {
         )}
       </div>
 
-      {/* Input Area */}
       <div className="p-4 bg-white border-t border-rose-100 pb-8">
         <div className="flex items-center space-x-2 max-w-4xl mx-auto">
           <Button variant="ghost" size="icon" className="text-rose-300 shrink-0 hover:bg-rose-50 rounded-full">
@@ -254,7 +248,7 @@ const Chat = () => {
           <Button 
             onClick={handleSend}
             disabled={isTyping || !inputValue.trim()}
-            className="bg-rose-500 hover:bg-rose-600 text-white rounded-full w-12 h-12 p-0 shrink-0 shadow-lg shadow-rose-200 disabled:opacity-50 transition-all active:scale-90"
+            className="bg-rose-500 hover:bg-rose-600 text-white rounded-full w-12 h-12 p-0 shrink-0 shadow-lg shadow-rose-200 transition-all active:scale-90"
           >
             <Send className="w-5 h-5" />
           </Button>
