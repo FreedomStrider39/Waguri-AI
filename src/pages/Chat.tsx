@@ -8,6 +8,7 @@ import ChatBubble from '@/components/ChatBubble';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
+import { cn } from "@/lib/utils";
 import {
   Sheet,
   SheetContent,
@@ -37,7 +38,35 @@ const Chat = () => {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState({ text: "Online", color: "bg-green-500" });
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Dynamic Status Logic
+  useEffect(() => {
+    const updateStatus = () => {
+      if (isTyping) {
+        setCurrentStatus({ text: "Typing...", color: "bg-green-500 animate-pulse" });
+        return;
+      }
+
+      const hour = new Date().getHours();
+      if (hour >= 0 && hour < 7) {
+        setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-300" });
+      } else if (hour >= 8 && hour < 15) {
+        setCurrentStatus({ text: "At School 🏫", color: "bg-amber-400" });
+      } else if (hour >= 15 && hour < 18) {
+        setCurrentStatus({ text: "Baking 🍰", color: "bg-green-500" });
+      } else if (hour >= 18 && hour < 22) {
+        setCurrentStatus({ text: "Studying 📖", color: "bg-green-500" });
+      } else {
+        setCurrentStatus({ text: "Relaxing ✨", color: "bg-green-500" });
+      }
+    };
+
+    updateStatus();
+    const interval = setInterval(updateStatus, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [isTyping]);
 
   useEffect(() => {
     if ('Notification' in window) {
@@ -183,11 +212,13 @@ const Chat = () => {
                   <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden border border-rose-200">
                     <img src="/src/assets/karouko.png" alt="Karouko" className="w-full h-full object-cover" />
                   </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                  <div className={cn("absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-white rounded-full transition-colors duration-500", currentStatus.color)}></div>
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-800 text-sm leading-tight">Karouko Waguri</h3>
-                  <span className="text-[10px] text-rose-400 font-medium">Online</span>
+                  <span className={cn("text-[10px] font-medium transition-colors duration-500", isTyping ? "text-green-500" : "text-rose-400")}>
+                    {currentStatus.text}
+                  </span>
                 </div>
               </button>
             </SheetTrigger>
