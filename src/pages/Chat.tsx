@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost } from 'lucide-react';
+import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost, Clock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
@@ -32,39 +32,47 @@ const GIFTS = [
   { emoji: "👻", label: "Spooky Friend", icon: <Ghost className="w-5 h-5 text-slate-400" /> },
 ];
 
+const SCHEDULE = [
+  { time: "00:00 - 07:00", activity: "Sleeping 🌙", color: "text-slate-400" },
+  { time: "08:00 - 15:00", activity: "At School 🏫", color: "text-amber-500" },
+  { time: "15:00 - 18:00", activity: "Baking 🍰", color: "text-rose-500" },
+  { time: "18:00 - 22:00", activity: "Studying 📖", color: "text-blue-500" },
+  { time: "22:00 - 00:00", activity: "Relaxing ✨", color: "text-purple-500" },
+];
+
 const Chat = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
-  const [currentStatus, setCurrentStatus] = useState({ text: "Online", color: "bg-green-500" });
+  const [currentStatus, setCurrentStatus] = useState({ text: "Online", color: "bg-green-500", subtext: "Active now" });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Dynamic Status Logic
   useEffect(() => {
     const updateStatus = () => {
       if (isTyping) {
-        setCurrentStatus({ text: "Typing...", color: "bg-green-500 animate-pulse" });
+        setCurrentStatus({ text: "Typing...", color: "bg-green-500 animate-pulse", subtext: "Karouko is writing..." });
         return;
       }
 
       const hour = new Date().getHours();
       if (hour >= 0 && hour < 7) {
-        setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-300" });
+        setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-300", subtext: "Last seen 5m ago" });
       } else if (hour >= 8 && hour < 15) {
-        setCurrentStatus({ text: "At School 🏫", color: "bg-amber-400" });
+        setCurrentStatus({ text: "At School 🏫", color: "bg-amber-400", subtext: "Online" });
       } else if (hour >= 15 && hour < 18) {
-        setCurrentStatus({ text: "Baking 🍰", color: "bg-green-500" });
+        setCurrentStatus({ text: "Baking 🍰", color: "bg-green-500", subtext: "Active now" });
       } else if (hour >= 18 && hour < 22) {
-        setCurrentStatus({ text: "Studying 📖", color: "bg-green-500" });
+        setCurrentStatus({ text: "Studying 📖", color: "bg-green-500", subtext: "Online" });
       } else {
-        setCurrentStatus({ text: "Relaxing ✨", color: "bg-green-500" });
+        setCurrentStatus({ text: "Relaxing ✨", color: "bg-green-500", subtext: "Active now" });
       }
     };
 
     updateStatus();
-    const interval = setInterval(updateStatus, 60000); // Update every minute
+    const interval = setInterval(updateStatus, 30000); // Update every 30 seconds
     return () => clearInterval(interval);
   }, [isTyping]);
 
@@ -216,13 +224,18 @@ const Chat = () => {
                 </div>
                 <div>
                   <h3 className="font-bold text-slate-800 text-sm leading-tight">Karouko Waguri</h3>
-                  <span className={cn("text-[10px] font-medium transition-colors duration-500", isTyping ? "text-green-500" : "text-rose-400")}>
-                    {currentStatus.text}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className={cn("text-[10px] font-bold transition-colors duration-500", isTyping ? "text-green-500" : "text-rose-400")}>
+                      {currentStatus.text}
+                    </span>
+                    <span className="text-[8px] text-slate-400 font-medium leading-none mt-0.5">
+                      {currentStatus.subtext}
+                    </span>
+                  </div>
                 </div>
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="bg-[#FFF9F9] border-l-rose-100">
+            <SheetContent side="right" className="bg-[#FFF9F9] border-l-rose-100 overflow-y-auto">
               <SheetHeader className="items-center text-center pt-8">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl mb-4">
                   <img src="/src/assets/karouko.png" alt="Karouko" className="w-full h-full object-cover" />
@@ -232,7 +245,22 @@ const Chat = () => {
                   19 years old • Kikyo Private Academy
                 </SheetDescription>
               </SheetHeader>
+              
               <div className="mt-8 space-y-6 px-2">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-rose-50">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center">
+                    <Clock className="w-3 h-3 mr-1.5" /> Daily Schedule
+                  </h4>
+                  <div className="space-y-3">
+                    {SCHEDULE.map((item) => (
+                      <div key={item.time} className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400 font-medium">{item.time}</span>
+                        <span className={cn("font-bold", item.color)}>{item.activity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <Button 
                   variant={notificationsEnabled ? "outline" : "default"}
                   className={notificationsEnabled ? "w-full border-rose-200 text-rose-400" : "w-full bg-rose-500 hover:bg-rose-600"}
@@ -241,6 +269,7 @@ const Chat = () => {
                   {notificationsEnabled ? <BellOff className="w-4 h-4 mr-2" /> : <Bell className="w-4 h-4 mr-2" />}
                   {notificationsEnabled ? "Notifications On" : "Enable Notifications"}
                 </Button>
+
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-rose-50">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">About Me</h4>
                   <p className="text-sm text-slate-600 leading-relaxed">
