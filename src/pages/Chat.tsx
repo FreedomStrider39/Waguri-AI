@@ -62,11 +62,11 @@ const Chat = () => {
       if (hour >= 0 && hour < 7) {
         setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-300", subtext: "Last seen 5m ago" });
       } else if (hour >= 8 && hour < 15) {
-        setCurrentStatus({ text: "At School 🏫", color: "bg-amber-400", subtext: "Online" });
+        setCurrentStatus({ text: "At School 🏫", color: "bg-amber-400", subtext: "In class" });
       } else if (hour >= 15 && hour < 18) {
         setCurrentStatus({ text: "Baking 🍰", color: "bg-green-500", subtext: "Active now" });
       } else if (hour >= 18 && hour < 22) {
-        setCurrentStatus({ text: "Studying 📖", color: "bg-green-500", subtext: "Online" });
+        setCurrentStatus({ text: "Studying 📖", color: "bg-green-500", subtext: "Focused" });
       } else {
         setCurrentStatus({ text: "Relaxing ✨", color: "bg-green-500", subtext: "Active now" });
       }
@@ -78,18 +78,13 @@ const Chat = () => {
   }, [isTyping]);
 
   useEffect(() => {
-    if ('Notification' in window) {
-      setNotificationsEnabled(Notification.permission === 'granted');
-    }
-
     const fetchData = async () => {
-      // Fetch Messages
       const { data: msgData } = await supabase
         .from('messages')
         .select('*')
         .order('created_at', { ascending: true });
       
-      if (msgData && msgData.length > 0) {
+      if (msgData) {
         setMessages(msgData.map(m => ({
           id: m.id,
           text: m.text,
@@ -97,17 +92,8 @@ const Chat = () => {
           time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: m.status
         })));
-      } else {
-        setMessages([{ 
-          id: 'initial', 
-          text: "Um... hello! I'm Karouko Waguri. I was a bit nervous to message you first, but I'm really glad I did. How are you doing today?", 
-          isUser: false, 
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          status: 'read'
-        }]);
       }
 
-      // Fetch Planned Events
       const { data: eventData } = await supabase
         .from('planned_events')
         .select('*')
@@ -135,17 +121,8 @@ const Chat = () => {
       })
       .subscribe();
 
-    const eventChannel = supabase
-      .channel('public:planned_events')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'planned_events' }, () => {
-        supabase.from('planned_events').select('*').order('created_at', { ascending: false })
-          .then(({ data }) => { if (data) setPlannedEvents(data); });
-      })
-      .subscribe();
-
     return () => {
       supabase.removeChannel(msgChannel);
-      supabase.removeChannel(eventChannel);
     };
   }, []);
 
@@ -154,21 +131,6 @@ const Chat = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
-
-  const requestNotificationPermission = async () => {
-    if (!('Notification' in window)) {
-      showError("This browser doesn't support notifications.");
-      return;
-    }
-
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      setNotificationsEnabled(true);
-      showSuccess("Karouko can now reach you anytime! 🌸");
-    } else {
-      showError("Notifications were denied.");
-    }
-  };
 
   const handleSend = async (textOverride?: string) => {
     const text = textOverride || inputValue;
@@ -188,7 +150,7 @@ const Chat = () => {
       const response = await fetch('https://ztnnmgnoschgreqsodfq.supabase.co/functions/v1/karouko-chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: messages.slice(-5) })
+        body: JSON.stringify({ message: text })
       });
 
       const data = await response.json();
@@ -204,19 +166,6 @@ const Chat = () => {
     const message = `I brought you this: ${gift.emoji} (${gift.label})! I hope you like it. 🌸`;
     handleSend(message);
     showSuccess(`You gave Karouko a ${gift.label}!`);
-  };
-
-  const deleteEvent = async (id: string) => {
-    await supabase.from('planned_events').delete().eq('id', id);
-    showSuccess("Event removed from schedule.");
-  };
-
-  const clearChat = async () => {
-    if (window.confirm("Do you want to clear your conversation history?")) {
-      await supabase.from('messages').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      setMessages([]);
-      window.location.reload();
-    }
   };
 
   return (
@@ -261,7 +210,6 @@ const Chat = () => {
               </SheetHeader>
               
               <div className="mt-8 space-y-6 px-2">
-                {/* Planned Events Section */}
                 {plannedEvents.length > 0 && (
                   <div className="bg-rose-500 p-4 rounded-2xl shadow-lg shadow-rose-200 border border-rose-400 text-white">
                     <h4 className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center">
@@ -269,19 +217,9 @@ const Chat = () => {
                     </h4>
                     <div className="space-y-3">
                       {plannedEvents.map((event) => (
-                        <div key={event.id} className="bg-white/10 p-2 rounded-xl relative group">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-sm font-bold">{event.title}</p>
-                              <p className="text-[10px] opacity-80">{event.event_time}</p>
-                            </div>
-                            <button 
-                              onClick={() => deleteEvent(event.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/20 rounded-lg"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
+                        <div key={event.id} className="bg-white/10 p-2 rounded-xl">
+                          <p className="text-sm font-bold">{event.title}</p>
+                          <p className="text-[10px] opacity-80">{event.event_time}</p>
                         </div>
                       ))}
                     </div>
@@ -302,15 +240,6 @@ const Chat = () => {
                   </div>
                 </div>
 
-                <Button 
-                  variant={notificationsEnabled ? "outline" : "default"}
-                  className={notificationsEnabled ? "w-full border-rose-200 text-rose-400" : "w-full bg-rose-500 hover:bg-rose-600"}
-                  onClick={requestNotificationPermission}
-                >
-                  {notificationsEnabled ? <BellOff className="w-4 h-4 mr-2" /> : <Bell className="w-4 h-4 mr-2" />}
-                  {notificationsEnabled ? "Notifications On" : "Enable Notifications"}
-                </Button>
-
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-rose-50">
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">About Me</h4>
                   <p className="text-sm text-slate-600 leading-relaxed">
@@ -323,15 +252,7 @@ const Chat = () => {
         </div>
         
         <div className="flex items-center space-x-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={requestNotificationPermission}
-            className={notificationsEnabled ? "text-rose-400" : "text-slate-300"}
-          >
-            {notificationsEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
-          </Button>
-          <Button variant="ghost" size="icon" onClick={clearChat} className="text-slate-300 hover:text-rose-400">
+          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-rose-400">
             <MoreVertical className="w-5 h-5" />
           </Button>
         </div>
@@ -358,6 +279,14 @@ const Chat = () => {
       </div>
 
       <div className="p-4 bg-white border-t border-rose-100 pb-8">
+        {currentStatus.text.includes("Sleeping") || currentStatus.text.includes("School") ? (
+          <div className="text-center mb-3 animate-pulse">
+            <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest">
+              Karouko is {currentStatus.text.toLowerCase()}... she might reply later.
+            </span>
+          </div>
+        ) : null}
+        
         <div className="flex items-center space-x-2 max-w-4xl mx-auto">
           <Popover>
             <PopoverTrigger asChild>

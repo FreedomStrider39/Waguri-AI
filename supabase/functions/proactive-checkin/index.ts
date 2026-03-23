@@ -32,6 +32,7 @@ serve(async (req) => {
   const hour = now.getHours()
   let reply = ""
 
+  // If it's been more than an hour since the last message, she might check in
   if (diffHours >= 1) {
     if (hour >= 6 && hour < 10) {
       reply = "Good morning! I just woke up and was wondering if you've had breakfast yet? I'm making some pancakes... 🥞"
@@ -51,12 +52,7 @@ serve(async (req) => {
     // 3. Insert the message so it's there when they come back
     await supabase.from('messages').insert([{ text: reply, is_user: false, status: 'read' }])
 
-    // 4. Trigger Push Notifications for all subscribers
-    const { data: subs } = await supabase.from('push_subscriptions').select('subscription')
-    
-    // In a real environment, you'd loop through 'subs' and send the push here.
-    console.log(`[proactive-checkin] Sent notification to ${subs?.length || 0} devices: ${reply}`);
-
+    console.log(`[proactive-checkin] Karouko sent a check-in: ${reply}`);
     return new Response(JSON.stringify({ sent: true, reply }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 
