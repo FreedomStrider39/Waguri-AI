@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, MoreVertical, Smile } from 'lucide-react';
+import { Send, ArrowLeft, Smile } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
@@ -59,31 +59,26 @@ const Chat = () => {
   return (
     <div className="flex flex-col h-screen bg-[#FFF9F9]">
       {/* Header */}
-      <header className="bg-white border-b border-rose-100 px-4 py-3 flex items-center justify-between sticky top-0 z-10">
+      <header className="bg-white border-b border-rose-100 px-4 py-3 flex items-center sticky top-0 z-10">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="text-slate-400 mr-2">
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="text-slate-400">
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden border border-rose-200">
-              <img 
-                src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=100&h=100&auto=format&fit=crop" 
-                alt="Karouko"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-800 text-sm">Karouko Waguri</h3>
-              <div className="flex items-center">
-                <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
-                <span className="text-[10px] text-slate-400">Online</span>
-              </div>
+          <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden border border-rose-200">
+            <img 
+              src="/src/assets/karouko.png" 
+              alt="Karouko"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-800 text-sm">Karouko Waguri</h3>
+            <div className="flex items-center">
+              <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
+              <span className="text-[10px] text-slate-400">Online</span>
             </div>
           </div>
         </div>
-        <Button variant="ghost" size="icon" className="text-slate-400">
-          <MoreVertical className="w-5 h-5" />
-        </Button>
       </header>
 
       {/* Chat Area */}
@@ -91,11 +86,6 @@ const Chat = () => {
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-4 space-y-2 scroll-smooth"
       >
-        <div className="text-center py-4">
-          <span className="text-[10px] bg-rose-50 text-rose-400 px-3 py-1 rounded-full font-medium uppercase tracking-wider">
-            Today
-          </span>
-        </div>
         {messages.map((msg) => (
           <ChatBubble 
             key={msg.id} 
