@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
   SheetContent,
@@ -17,77 +18,119 @@ import {
 
 const Chat = () => {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('karouko_messages');
-    return saved ? JSON.parse(saved) : [
-      { 
-        id: 'initial', 
-        text: "Um... hello! I'm Karouko Waguri. I was a bit nervous to message you first, but I'm really glad I did. How are you doing today?", 
-        isUser: false, 
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        status: 'read'
-      }
-    ];
-  });
+  const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Fetch initial messages
   useEffect(() => {
-    localStorage.setItem('karouko_messages', JSON.stringify(messages));
+    const fetchMessages = async () => {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: true });
+      
+      if (data && data.length > 0) {
+        setMessages(data.map(m => ({
+          id: m.id,
+          text: m.text,
+          isUser: m.is_user,
+          time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          status: m.status
+        })));
+      } else {
+        // Initial greeting if no history
+        setMessages([{ 
+          id: 'initial', 
+          text: "Um... hello! I'm Karouko Waguri. I was a bit nervous to message you first, but I'm really glad I did. How are you doing today?", 
+          isUser: false, 
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          status: 'read'
+        }]);
+      }
+    };
+
+    fetchMessages();
+
+    // Subscribe to new messages
+    const channel = supabase
+      .channel('public:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const newMessage = payload.new;
+        setMessages(prev => {
+          if (prev.find(m => m.id === newMessage.id)) return prev;
+          return [...prev, {
+            id: newMessage.id,
+            text: newMessage.text,
+            isUser: newMessage.is_user,
+            time: new Date(newMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            status: newMessage.status
+          }];
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim() || isTyping) return;
 
-    const userMessage = {
-      id: Date.now().toString(),
-      text: inputValue,
-      isUser: true,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      status: 'sent'
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    const text = inputValue;
     setInputValue("");
-    
-    // Simulate delivery and read status
-    setTimeout(() => {
-      setMessages(prev => prev.map(m => m.id === userMessage.id ? { ...m, status: 'delivered' } : m));
-    }, 500);
 
-    setTimeout(() => {
-      setMessages(prev => prev.map(m => m.id === userMessage.id ? { ...m, status: 'read' } : m));
-      setIsTyping(true);
-    }, 1500);
+    // 1. Insert user message to Supabase
+    const { data: userMsgData, error: userMsgError } = await supabase
+      .from('messages')
+      .insert([{ text, is_user: true, status: 'sent' }])
+      .select()
+      .single();
 
-    // Simulate Karouko's thoughtful response
-    const delay = 2000 + Math.random() * 3000;
-    setTimeout(() => {
-      const responses = [
-        "That's really interesting! I love hearing about your day. It makes me feel closer to you. ✨",
-        "Hehe, you're so sweet. I was just thinking about what cake to bake next... maybe something with strawberries? 🍰",
-        "I'm so happy we can talk like this. I usually keep things to myself, but with you, it feels different.",
-        "Please make sure to take care of yourself, okay? I'd be sad if you pushed yourself too hard. 🌸",
-        "I'm always cheering for you! No matter what happens, I'm on your side.",
-        "I saw something today that reminded me of you... it made me smile without even realizing it.",
-        "Kosuke was asking about you earlier! He thinks you're a cool person too. 😊",
-        "Thank you for being so kind to me. It really means a lot."
-      ];
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    if (userMsgError) return;
+
+    // 2. Trigger typing indicator
+    setIsTyping(true);
+
+    // 3. Call Edge Function for Karouko's response
+    try {
+      const response = await fetch('https://ztnnmgnoschgreqsodfq.supabase.co/functions/v1/karouko-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.auth.getSession()}` // Optional if public
+        },
+        body: JSON.stringify({ message: text, history: messages.slice(-5) })
+      });
+
+      const data = await response.json();
       
-      setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
-        text: randomResponse,
-        isUser: false,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        status: 'read'
-      }]);
+      // 4. Insert Karouko's response to Supabase
+      await supabase
+        .from('messages')
+        .insert([{ text: data.reply, is_user: false, status: 'read' }]);
+
+    } catch (error) {
+      console.error("Failed to get response:", error);
+    } finally {
       setIsTyping(false);
-    }, delay);
+    }
+  };
+
+  const clearChat = async () => {
+    if (window.confirm("Do you want to clear your conversation history?")) {
+      await supabase.from('messages').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      setMessages([]);
+      window.location.reload();
+    }
   };
 
   return (
@@ -156,7 +199,7 @@ const Chat = () => {
           <Button variant="ghost" size="icon" className="text-slate-300 hover:text-rose-400">
             <Info className="w-5 h-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-rose-400">
+          <Button variant="ghost" size="icon" onClick={clearChat} className="text-slate-300 hover:text-rose-400">
             <MoreVertical className="w-5 h-5" />
           </Button>
         </div>
