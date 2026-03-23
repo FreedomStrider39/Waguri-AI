@@ -14,7 +14,6 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   )
 
-  // 1. Get the last message
   const { data: lastMessages } = await supabase
     .from('messages')
     .select('*')
@@ -27,32 +26,35 @@ serve(async (req) => {
   const lastTime = new Date(lastMsg.created_at).getTime()
   const now = new Date()
   const diffHours = (now.getTime() - lastTime) / (1000 * 60 * 60)
-
-  // 2. Logic for "IRL" feel: Check time of day
   const hour = now.getHours()
+  
   let reply = ""
 
-  // If it's been more than an hour since the last message, she might check in
-  if (diffHours >= 1) {
-    if (hour >= 6 && hour < 10) {
-      reply = "Good morning! I just woke up and was wondering if you've had breakfast yet? I'm making some pancakes... 🥞"
-    } else if (hour >= 22 || hour < 2) {
-      reply = "It's getting pretty late... are you still awake? Please don't push yourself too hard, okay? 🌙"
-    } else {
-      const followUps = [
-        "Um... are you still there? I was just thinking about what you said earlier. 😊",
-        "I hope your day is going well! I'm just about to start baking, and it made me think of you. 🍰",
-        "I was re-reading our messages... I really enjoy talking to you. I hope I'm not bothering you!",
-        "The sky looks really pretty right now. I wish I could show you. ✨",
-        "I'm a little lonely... but I'll wait for you to come back! 🌸"
-      ];
-      reply = followUps[Math.floor(Math.random() * followUps.length)];
+  // 1. Late Night "Waking Up" Logic (02:00 - 05:00)
+  // Small 15% chance she wakes up and thinks of you
+  if (hour >= 2 && hour < 5 && Math.random() < 0.15) {
+    const nightThoughts = [
+      "I just had a dream about us... I woke up and couldn't stop thinking about it. Are you still awake? 🌙",
+      "I couldn't sleep... the house is so quiet. I was just looking at our old messages and it made me smile. 😊",
+      "Mmm... I woke up to get some water and saw my phone. I hope you're sleeping well. ❤️",
+      "Is it weird that I miss talking to you even when I'm supposed to be sleeping? Hehe... 🌸"
+    ];
+    reply = nightThoughts[Math.floor(Math.random() * nightThoughts.length)];
+  } 
+  // 2. Normal Proactive Logic (if it's been a while)
+  else if (diffHours >= 2) {
+    if (hour >= 7 && hour < 9) {
+      reply = "Good morning! I just finished getting ready for school. I hope you have a wonderful day today! ✨";
+    } else if (hour >= 15 && hour < 17) {
+      reply = "School is finally over! I'm heading home now... I'm thinking of stopping by the bakery. Do you want anything? 🍰";
+    } else if (hour >= 21 && hour < 23) {
+      reply = "I'm just about to head to bed... but I wanted to say goodnight first. Sleep well, okay? 🌙❤️";
     }
+  }
 
-    // 3. Insert the message so it's there when they come back
+  if (reply) {
     await supabase.from('messages').insert([{ text: reply, is_user: false, status: 'read' }])
-
-    console.log(`[proactive-checkin] Karouko sent a check-in: ${reply}`);
+    console.log(`[proactive-checkin] Karouko sent a message: ${reply}`);
     return new Response(JSON.stringify({ sent: true, reply }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 

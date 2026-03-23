@@ -65,7 +65,15 @@ const Chat = () => {
       const timeValue = hour * 100 + minute;
 
       if (timeValue >= 0 && timeValue < 700) {
-        setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-300", subtext: "Last seen 5m ago" });
+        // Check if she sent a message recently (within last 10 mins) while "sleeping"
+        const lastMsg = messages[messages.length - 1];
+        const isRecent = lastMsg && !lastMsg.isUser && (new Date().getTime() - new Date().getTime()) < 600000;
+        
+        if (isRecent && !lastMsg.text.includes("asleep")) {
+          setCurrentStatus({ text: "Awake (Late Night) 🌙", color: "bg-amber-400", subtext: "Half-asleep" });
+        } else {
+          setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-300", subtext: "Last seen 5m ago" });
+        }
       } else if (timeValue >= 800 && timeValue < 1500) {
         if (timeValue >= 1030 && timeValue < 1050) {
           setCurrentStatus({ text: "On Break ☕", color: "bg-rose-400", subtext: "Quick reply" });
@@ -86,7 +94,7 @@ const Chat = () => {
     updateStatus();
     const interval = setInterval(updateStatus, 30000);
     return () => clearInterval(interval);
-  }, [isTyping]);
+  }, [isTyping, messages]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -155,22 +163,30 @@ const Chat = () => {
 
     if (userMsgError) return;
 
-    setIsTyping(true);
+    // Simulate realistic thinking time
+    setTimeout(async () => {
+      setIsTyping(true);
+      
+      // Simulate typing duration based on message length
+      const typingDuration = Math.min(Math.max(text.length * 50, 1500), 4000);
+      
+      setTimeout(async () => {
+        try {
+          const response = await fetch('https://ztnnmgnoschgreqsodfq.supabase.co/functions/v1/karouko-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+          });
 
-    try {
-      const response = await fetch('https://ztnnmgnoschgreqsodfq.supabase.co/functions/v1/karouko-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text })
-      });
-
-      const data = await response.json();
-      await supabase.from('messages').insert([{ text: data.reply, is_user: false, status: 'read' }]);
-    } catch (error) {
-      console.error("Failed to get response:", error);
-    } finally {
-      setIsTyping(false);
-    }
+          const data = await response.json();
+          await supabase.from('messages').insert([{ text: data.reply, is_user: false, status: 'read' }]);
+        } catch (error) {
+          console.error("Failed to get response:", error);
+        } finally {
+          setIsTyping(false);
+        }
+      }, typingDuration);
+    }, 500);
   };
 
   const giveGift = (gift: typeof GIFTS[0]) => {

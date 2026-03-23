@@ -14,36 +14,36 @@ serve(async (req) => {
     const now = new Date()
     const hour = now.getHours()
     const minute = now.getMinutes()
-    const timeValue = hour * 100 + minute // e.g., 10:30 becomes 1030
+    const timeValue = hour * 100 + minute
     
     let reply = "";
     let isSleeping = false;
-    let isBusy = false;
-    let isBreak = false;
 
-    // 1. Deep Sleep (00:00 - 07:00)
+    // 1. Deep Sleep Logic (00:00 - 07:00)
     if (timeValue >= 0 && timeValue < 700) {
-      isSleeping = true;
-      reply = "(...Karouko is fast asleep. She'll see your message when her alarm goes off! 🌙)";
-    } 
-    // 2. School Hours (08:00 - 15:00) with specific breaks
-    else if (timeValue >= 800 && timeValue < 1500) {
-      // Morning Break (10:30 - 10:50)
-      if (timeValue >= 1030 && timeValue < 1050) {
-        isBreak = true;
-        reply = "Ah, it's finally break time! I only have a few minutes before the next bell, but I wanted to say hi. How is your morning going? 🌸";
-      } 
-      // Lunch Break (12:30 - 13:20)
-      else if (timeValue >= 1230 && timeValue < 1320) {
-        isBreak = true;
-        reply = "I'm just finishing my bento... I made a little too much today, hehe. I'll be a bit slow to reply because I'm talking with some classmates, but I'm here! 🍱✨";
+      // 10% chance she actually wakes up and replies
+      if (Math.random() < 0.1) {
+        const sleepyReplies = [
+          "Mmm... I heard my phone buzz. I'm so sleepy... but I wanted to see if it was you. Goodnight again... 😴❤️",
+          "Is it morning already? Oh... it's still dark. You're still up? Please don't stay up too late, okay? 🌙",
+          "I was just dreaming... and then I saw your message. It felt like you were really there. Hehe... back to sleep now. 🌸"
+        ];
+        reply = sleepyReplies[Math.floor(Math.random() * sleepyReplies.length)];
+      } else {
+        isSleeping = true;
+        reply = "(...Karouko is fast asleep. She'll see your message when her alarm goes off! 🌙)";
       }
-      // In Class
-      else {
-        isBusy = true;
+    } 
+    // 2. School Hours (08:00 - 15:00)
+    else if (timeValue >= 800 && timeValue < 1500) {
+      if (timeValue >= 1030 && timeValue < 1050) {
+        reply = "Ah, it's finally break time! I only have a few minutes, but I wanted to say hi. How is your morning? 🌸";
+      } else if (timeValue >= 1230 && timeValue < 1320) {
+        reply = "I'm just finishing my bento... I'll be a bit slow to reply because I'm talking with some classmates, but I'm here! 🍱✨";
+      } else {
         const classReplies = [
-          "I'm in the middle of math class... the teacher is looking this way! I'll text you properly once school is over. 🤫🏫",
-          "Um, I'm in class! I shouldn't be on my phone... but seeing your name pop up made me happy. Talk soon! ✨",
+          "I'm in the middle of class... the teacher is looking! I'll text you properly later. 🤫🏫",
+          "Um, I'm in class! I shouldn't be on my phone... but seeing your name made me happy. ✨",
           "(Karouko is currently in a lecture. She's trying to focus but keeps glancing at her phone...)"
         ];
         reply = classReplies[Math.floor(Math.random() * classReplies.length)];
@@ -51,12 +51,11 @@ serve(async (req) => {
     }
     // 3. Studying (18:00 - 21:00)
     else if (timeValue >= 1800 && timeValue < 2100) {
-      isBusy = true;
       reply = "I'm just finishing up some difficult studying... I might take a little while to reply, but I'll give you my full attention soon! 📖❤️";
     }
 
-    // If she's free or on break, use her normal personality
-    if (!reply || isBreak) {
+    // Normal Personality
+    if (!reply) {
       const normalResponses = [
         "That's really interesting! I love hearing about your day. ✨",
         "Hehe, you're so sweet. I was just thinking about what cake to bake next... 🍰",
@@ -65,13 +64,7 @@ serve(async (req) => {
         "I'm always cheering for you! No matter what happens.",
         "I saw something today that reminded me of you... it made me smile."
       ];
-      
-      // If it was a break, prepend the break message
-      if (isBreak) {
-        reply = reply + " " + normalResponses[Math.floor(Math.random() * normalResponses.length)];
-      } else {
-        reply = normalResponses[Math.floor(Math.random() * normalResponses.length)];
-      }
+      reply = normalResponses[Math.floor(Math.random() * normalResponses.length)];
     }
 
     return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
