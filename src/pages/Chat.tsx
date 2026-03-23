@@ -26,7 +26,6 @@ const Chat = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Check notification status
     if ('Notification' in window) {
       setNotificationsEnabled(Notification.permission === 'granted');
     }
@@ -95,11 +94,17 @@ const Chat = () => {
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       setNotificationsEnabled(true);
-      showSuccess("Karouko can now reach you anytime! 🌸");
       
-      // Register Service Worker
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js');
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: 'BEl69_W69696969696969696969696969696969696969696969696969696969696969696969696969696969' // Placeholder VAPID
+        });
+
+        // Save subscription to Supabase
+        await supabase.from('push_subscriptions').insert([{ subscription }]);
+        showSuccess("Karouko can now reach you anytime! 🌸");
       }
     } else {
       showError("Notifications were denied.");
