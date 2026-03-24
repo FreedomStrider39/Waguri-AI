@@ -30,22 +30,6 @@ const Login = () => {
         className="max-w-md w-full space-y-6 z-10"
       >
         <div className="text-center space-y-4">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="inline-block relative"
-          >
-            <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-rose-500/20 shadow-2xl mx-auto">
-              <img 
-                src="/src/assets/karouko-login.png" 
-                alt="Karouko" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-[#0a0a0a] rounded-full"></div>
-          </motion.div>
-          
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-white tracking-tight">Welcome Back</h1>
             <p className="text-slate-400 text-sm">Sign in to continue your conversation with Karouko</p>
