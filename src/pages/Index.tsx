@@ -2,23 +2,34 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageCircle, Heart } from 'lucide-react';
+import { MessageCircle, Heart, LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { MadeWithDyad } from "@/components/made-with-dyad";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from '@/components/AuthProvider';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { session, loading: authLoading } = useAuth();
   const [lastMessage, setLastMessage] = useState<string>("I'm so happy you're here!");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!authLoading && !session) {
+      navigate('/login');
+    }
+  }, [session, authLoading, navigate]);
+
+  useEffect(() => {
     const fetchLastMessage = async () => {
+      if (!session?.user?.id) return;
+
       const { data, error } = await supabase
         .from('messages')
         .select('text')
         .eq('is_user', false)
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
         .limit(1);
 
@@ -29,10 +40,16 @@ const Index = () => {
 
     fetchLastMessage();
     
-    // Simulate startup animation duration
     const timer = setTimeout(() => setIsLoading(false), 2000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [session]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
+
+  if (authLoading) return null;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 overflow-hidden relative">
@@ -78,7 +95,12 @@ const Index = () => {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="max-w-md w-full space-y-8 text-center z-10"
           >
-            {/* Decorative Glow */}
+            <div className="absolute top-4 right-4">
+              <Button variant="ghost" size="icon" onClick={handleLogout} className="text-slate-500 hover:text-rose-400">
+                <LogOut className="w-5 h-5" />
+              </Button>
+            </div>
+
             <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-rose-500/10 blur-[120px] rounded-full" />
             <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-rose-500/10 blur-[120px] rounded-full" />
 

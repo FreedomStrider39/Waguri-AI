@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
 import { getDailySchedule, WEEKLY_SCHOOL_SCHEDULE } from "@/utils/schedule";
+import { useAuth } from '@/components/AuthProvider';
 import {
   Sheet,
   SheetContent,
@@ -48,6 +49,7 @@ const VACATIONS = [
 
 const Chat = () => {
   const navigate = useNavigate();
+  const { session, loading: authLoading } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -56,6 +58,12 @@ const Chat = () => {
   const [dailySchedule, setDailySchedule] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!authLoading && !session) {
+      navigate('/login');
+    }
+  }, [session, authLoading, navigate]);
 
   const checkVacation = () => {
     const now = new Date();
@@ -113,10 +121,13 @@ const Chat = () => {
   }, [isTyping, messages]);
 
   useEffect(() => {
+    if (!session?.user?.id) return;
+
     const fetchData = async () => {
       const { data: msgData } = await supabase
         .from('messages')
         .select('*')
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: true });
       
       if (msgData) {
@@ -133,6 +144,7 @@ const Chat = () => {
       const { data: eventData } = await supabase
         .from('planned_events')
         .select('*')
+        .eq('user_id', session.user.id)
         .order('created_at', { ascending: false });
       
       if (eventData) setPlannedEvents(eventData);
@@ -141,8 +153,13 @@ const Chat = () => {
     fetchData();
 
     const msgChannel = supabase
-      .channel('public:messages')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+      .channel(`public:messages:user:${session.user.id}`)
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'messages',
+        filter: `user_id=eq.${session.user.id}`
+      }, (payload) => {
         const newMessage = payload.new;
         setMessages(prev => {
           if (prev.find(m => m.id === newMessage.id)) return prev;
@@ -161,7 +178,7 @@ const Chat = () => {
     return () => {
       supabase.removeChannel(msgChannel);
     };
-  }, []);
+  }, [session]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -170,6 +187,7 @@ const Chat = () => {
   }, [messages, isTyping]);
 
   const handleSend = async (textOverride?: string, imageUrl?: string) => {
+    if (!session?.user?.id) return;
     const text = textOverride || inputValue;
     if (!text.trim() && !imageUrl || isTyping) return;
 
@@ -177,7 +195,13 @@ const Chat = () => {
 
     const { error: userMsgError } = await supabase
       .from('messages')
-      .insert([{ text: text || null, image_url: imageUrl || null, is_user: true, status: 'sent' }]);
+      .insert([{ 
+        text: text || null, 
+        image_url: imageUrl || null, 
+        is_user: true, 
+        status: 'sent',
+        user_id: session.user.id
+      }]);
 
     if (userMsgError) return;
 
@@ -199,11 +223,20 @@ const Chat = () => {
           const response = await fetch('https://ztnnmgnoschgreqsodfq.supabase.co/functions/v1/karouko-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text, hasImage: !!imageUrl })
+            body: JSON.stringify({ 
+              message: text, 
+              hasImage: !!imageUrl,
+              userId: session.user.id 
+            })
           });
 
           const data = await response.json();
-          await supabase.from('messages').insert([{ text: data.reply, is_user: false, status: 'read' }]);
+          await supabase.from('messages').insert([{ 
+            text: data.reply, 
+            is_user: false, 
+            status: 'read',
+            user_id: session.user.id
+          }]);
         } catch (error) {
           console.error("Failed to get response:", error);
         } finally {
@@ -214,6 +247,7 @@ const Chat = () => {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!session?.user?.id) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -221,7 +255,7 @@ const Chat = () => {
     
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${session.user.id}/${Math.random()}.${fileExt}`;
       const filePath = `${fileName}`;
 
       const { error: uploadError, data } = await supabase.storage
@@ -236,7 +270,7 @@ const Chat = () => {
 
       handleSend("", publicUrl);
     } catch (error: any) {
-      showError("Failed to upload image. Make sure 'chat-images' bucket exists.");
+      showError("Failed to upload image.");
       console.error(error);
     }
   };
@@ -246,6 +280,8 @@ const Chat = () => {
     handleSend(message);
     showSuccess(`You gave Karouko a ${gift.label}!`);
   };
+
+  if (authLoading) return null;
 
   return (
     <div className="flex flex-col h-screen bg-[#0a0a0a] text-slate-200">
