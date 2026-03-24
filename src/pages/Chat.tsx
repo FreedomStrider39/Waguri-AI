@@ -40,10 +40,10 @@ const GIFTS = [
 
 const STATIC_SCHEDULE = [
   { time: "00:00 - 07:00", activity: "Sleeping 🌙", color: "text-slate-500" },
-  { time: "08:00 - 15:00", activity: "At School 🏫", color: "text-amber-500" },
+  { time: "08:00 - 16:00", activity: "At School 🏫", color: "text-amber-500" },
   { time: "10:30 - 10:50", activity: "Short Break ☕", color: "text-rose-400" },
   { time: "12:30 - 13:20", activity: "Lunch Break 🍱", color: "text-rose-500" },
-  { time: "15:00 - 18:00", activity: "Baking 🍰", color: "text-rose-500" },
+  { time: "16:00 - 18:00", activity: "Baking 🍰", color: "text-rose-500" },
   { time: "18:00 - 21:00", activity: "Studying 📖", color: "text-blue-500" },
   { time: "21:00 - 00:00", activity: "Relaxing ✨", color: "text-purple-500" },
 ];
@@ -94,7 +94,7 @@ const Chat = () => {
         }
       } else if (currentVacation) {
         setCurrentStatus({ text: `On ${currentVacation.name} ☀️`, color: "bg-green-500", subtext: "Enjoying vacation" });
-      } else if (timeValue >= 800 && timeValue < 1500) {
+      } else if (timeValue >= 800 && timeValue < 1600) {
         if (timeValue >= 1030 && timeValue < 1050) {
           setCurrentStatus({ text: "On Break ☕", color: "bg-rose-400", subtext: "Quick reply" });
         } else if (timeValue >= 1230 && timeValue < 1320) {
@@ -102,7 +102,7 @@ const Chat = () => {
         } else {
           setCurrentStatus({ text: "In Class 🏫", color: "bg-amber-400", subtext: "Busy" });
         }
-      } else if (timeValue >= 1500 && timeValue < 1800) {
+      } else if (timeValue >= 1600 && timeValue < 1800) {
         setCurrentStatus({ text: "Baking 🍰", color: "bg-green-500", subtext: "Active now" });
       } else if (timeValue >= 1800 && timeValue < 2100) {
         setCurrentStatus({ text: "Studying 📖", color: "bg-green-500", subtext: "Focused" });

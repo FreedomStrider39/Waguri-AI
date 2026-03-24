@@ -41,8 +41,8 @@ serve(async (req) => {
         return new Response(JSON.stringify({ reply: "(...Karouko is fast asleep. She'll see your message when her alarm goes off! 🌙)" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
       }
     } 
-    // 2. School Hours (08:00 - 15:00)
-    else if (!onVacation && timeValue >= 800 && timeValue < 1500) {
+    // 2. School Hours (08:00 - 16:00)
+    else if (!onVacation && timeValue >= 800 && timeValue < 1600) {
       const isBreak = (timeValue >= 1030 && timeValue < 1050) || (timeValue >= 1230 && timeValue < 1320);
       
       if (!isBreak) {

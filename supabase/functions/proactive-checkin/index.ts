@@ -31,7 +31,6 @@ serve(async (req) => {
   let reply = ""
 
   // 1. Late Night "Waking Up" Logic (02:00 - 05:00)
-  // Small 15% chance she wakes up and thinks of you
   if (hour >= 2 && hour < 5 && Math.random() < 0.15) {
     const nightThoughts = [
       "I just had a dream about us... I woke up and couldn't stop thinking about it. Are you still awake? 🌙",
@@ -45,7 +44,7 @@ serve(async (req) => {
   else if (diffHours >= 2) {
     if (hour >= 7 && hour < 9) {
       reply = "Good morning! I just finished getting ready for school. I hope you have a wonderful day today! ✨";
-    } else if (hour >= 15 && hour < 17) {
+    } else if (hour >= 16 && hour < 18) {
       reply = "School is finally over! I'm heading home now... I'm thinking of stopping by the bakery. Do you want anything? 🍰";
     } else if (hour >= 21 && hour < 23) {
       reply = "I'm just about to head to bed... but I wanted to say goodnight first. Sleep well, okay? 🌙❤️";
