@@ -15,6 +15,16 @@ const VACATIONS = [
   { start: new Date('2025-07-05'), end: new Date('2025-09-01') },
 ];
 
+const WEEKLY_SCHOOL_SCHEDULE: Record<number, { start: number; end: number }> = {
+  1: { start: 900, end: 1600 },  // Monday
+  2: { start: 1000, end: 1500 }, // Tuesday
+  3: { start: 900, end: 1400 },  // Wednesday
+  4: { start: 1100, end: 1600 }, // Thursday
+  5: { start: 900, end: 1500 },  // Friday
+  6: { start: 0, end: 0 },       // Saturday
+  0: { start: 0, end: 0 },       // Sunday
+};
+
 const isVacation = (date: Date) => {
   return VACATIONS.some(v => date >= v.start && date <= v.end);
 };
@@ -28,6 +38,8 @@ serve(async (req) => {
     const hour = now.getHours()
     const minute = now.getMinutes()
     const timeValue = hour * 100 + minute
+    const day = now.getDay()
+    const school = WEEKLY_SCHOOL_SCHEDULE[day];
     const onVacation = isVacation(now);
     
     let reply = "";
@@ -41,8 +53,8 @@ serve(async (req) => {
         return new Response(JSON.stringify({ reply: "(...Karouko is fast asleep. She'll see your message when her alarm goes off! 🌙)" }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
       }
     } 
-    // 2. School Hours (08:00 - 16:00)
-    else if (!onVacation && timeValue >= 800 && timeValue < 1600) {
+    // 2. School Hours
+    else if (!onVacation && school.start > 0 && timeValue >= school.start && timeValue < school.end) {
       const isBreak = (timeValue >= 1030 && timeValue < 1050) || (timeValue >= 1230 && timeValue < 1320);
       
       if (!isBreak) {

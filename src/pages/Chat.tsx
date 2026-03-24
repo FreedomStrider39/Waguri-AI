@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { showSuccess, showError } from "@/utils/toast";
 import { cn } from "@/lib/utils";
+import { getDailySchedule, WEEKLY_SCHOOL_SCHEDULE } from "@/utils/schedule";
 import {
   Sheet,
   SheetContent,
@@ -38,16 +39,6 @@ const GIFTS = [
   { emoji: "👻", label: "Spooky Friend", icon: <Ghost className="w-5 h-5 text-slate-400" /> },
 ];
 
-const STATIC_SCHEDULE = [
-  { time: "00:00 - 07:00", activity: "Sleeping 🌙", color: "text-slate-500" },
-  { time: "08:00 - 16:00", activity: "At School 🏫", color: "text-amber-500" },
-  { time: "10:30 - 10:50", activity: "Short Break ☕", color: "text-rose-400" },
-  { time: "12:30 - 13:20", activity: "Lunch Break 🍱", color: "text-rose-500" },
-  { time: "16:00 - 18:00", activity: "Baking 🍰", color: "text-rose-500" },
-  { time: "18:00 - 21:00", activity: "Studying 📖", color: "text-blue-500" },
-  { time: "21:00 - 00:00", activity: "Relaxing ✨", color: "text-purple-500" },
-];
-
 const VACATIONS = [
   { name: "Toussaint", start: new Date('2024-10-19'), end: new Date('2024-11-04') },
   { name: "Christmas", start: new Date('2024-12-21'), end: new Date('2025-01-06') },
@@ -63,6 +54,7 @@ const Chat = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [currentStatus, setCurrentStatus] = useState({ text: "Online", color: "bg-green-500", subtext: "Active now" });
   const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
+  const [dailySchedule, setDailySchedule] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const checkVacation = () => {
@@ -81,7 +73,11 @@ const Chat = () => {
       const hour = now.getHours();
       const minute = now.getMinutes();
       const timeValue = hour * 100 + minute;
+      const day = now.getDay();
+      const school = WEEKLY_SCHOOL_SCHEDULE[day];
       const currentVacation = checkVacation();
+
+      setDailySchedule(getDailySchedule(now));
 
       if (timeValue >= 0 && timeValue < 700) {
         const lastMsg = messages[messages.length - 1];
@@ -94,7 +90,7 @@ const Chat = () => {
         }
       } else if (currentVacation) {
         setCurrentStatus({ text: `On ${currentVacation.name} ☀️`, color: "bg-green-500", subtext: "Enjoying vacation" });
-      } else if (timeValue >= 800 && timeValue < 1600) {
+      } else if (school.start > 0 && timeValue >= school.start && timeValue < school.end) {
         if (timeValue >= 1030 && timeValue < 1050) {
           setCurrentStatus({ text: "On Break ☕", color: "bg-rose-400", subtext: "Quick reply" });
         } else if (timeValue >= 1230 && timeValue < 1320) {
@@ -102,7 +98,7 @@ const Chat = () => {
         } else {
           setCurrentStatus({ text: "In Class 🏫", color: "bg-amber-400", subtext: "Busy" });
         }
-      } else if (timeValue >= 1600 && timeValue < 1800) {
+      } else if (timeValue >= (school.end || 1600) && timeValue < 1800) {
         setCurrentStatus({ text: "Baking 🍰", color: "bg-green-500", subtext: "Active now" });
       } else if (timeValue >= 1800 && timeValue < 2100) {
         setCurrentStatus({ text: "Studying 📖", color: "bg-green-500", subtext: "Focused" });
@@ -284,7 +280,7 @@ const Chat = () => {
                     <Clock className="w-3 h-3 mr-1.5" /> Daily Schedule
                   </h4>
                   <div className="space-y-3">
-                    {STATIC_SCHEDULE.map((item) => (
+                    {dailySchedule.map((item) => (
                       <div key={item.time} className="flex items-center justify-between text-xs">
                         <span className="text-slate-500 font-medium">{item.time}</span>
                         <span className={cn("font-bold", item.color)}>{item.activity}</span>
