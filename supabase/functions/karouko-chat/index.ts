@@ -46,28 +46,40 @@ serve(async (req) => {
       const isBreak = (timeValue >= 1030 && timeValue < 1050) || (timeValue >= 1230 && timeValue < 1320);
       
       if (!isBreak) {
-        // In class: Hurried prefix
         const classPrefixes = [
           "(Texting under my desk...) ",
           "(The teacher isn't looking!) ",
           "(Quickly...) ",
           "I shouldn't be on my phone, but... "
         ];
-        prefix = classPrefixes[Math.floor(Math.random() * classPrefixes.classPrefixes)];
+        prefix = classPrefixes[Math.floor(Math.random() * classPrefixes.length)];
       }
     }
 
-    // Personality Logic
-    const normalResponses = [
-      "That's really interesting! I love hearing about your day. ✨",
-      "Hehe, you're so sweet. I was just thinking about what cake to bake next... 🍰",
-      "I'm so happy we can talk like this. It feels special.",
-      "Please make sure to take care of yourself, okay? 🌸",
-      "I'm always cheering for you! No matter what happens.",
-      "I saw something today that reminded me of you... it made me smile."
-    ];
+    // Gift Reaction Logic
+    if (message.includes("I brought you this:")) {
+      const giftReactions = [
+        "Oh! Is this for me? Thank you so much, it's beautiful! I'll treasure it. 💖",
+        "Wow, you're so thoughtful... how did you know I'd love this? Hehe, thank you! ✨",
+        "This makes me so happy! I'm going to put it in a special place. You're the best! 🌸",
+        "A gift? For me? My heart is beating so fast... thank you, really. 🍰",
+        "You always know exactly how to make me smile. Thank you for the gift! 🥰"
+      ];
+      reply = prefix + giftReactions[Math.floor(Math.random() * giftReactions.length)];
+    }
 
-    reply = prefix + normalResponses[Math.floor(Math.random() * normalResponses.length)];
+    // Personality Logic (if not a gift)
+    if (!reply) {
+      const normalResponses = [
+        "That's really interesting! I love hearing about your day. ✨",
+        "Hehe, you're so sweet. I was just thinking about what cake to bake next... 🍰",
+        "I'm so happy we can talk like this. It feels special.",
+        "Please make sure to take care of yourself, okay? 🌸",
+        "I'm always cheering for you! No matter what happens.",
+        "I saw something today that reminded me of you... it made me smile."
+      ];
+      reply = prefix + normalResponses[Math.floor(Math.random() * normalResponses.length)];
+    }
 
     return new Response(JSON.stringify({ reply }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   } catch (error) {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost, Clock, CalendarDays, Trash2 } from 'lucide-react';
+import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost, Clock, CalendarDays, Trash2, Cookie, Mail, Sparkles } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
@@ -25,10 +25,16 @@ import {
 
 const GIFTS = [
   { emoji: "🍰", label: "Strawberry Cake", icon: <Cake className="w-5 h-5 text-rose-400" /> },
+  { emoji: "🎂", label: "Chocolate Cake", icon: <Cake className="w-5 h-5 text-amber-900" /> },
+  { emoji: "🌹", label: "Red Roses", icon: <Flower2 className="w-5 h-5 text-red-500" /> },
   { emoji: "🌸", label: "Cherry Blossom", icon: <Flower2 className="w-5 h-5 text-pink-400" /> },
-  { emoji: "🍵", label: "Green Tea", icon: <Coffee className="w-5 h-5 text-emerald-500" /> },
+  { emoji: "🍫", label: "Chocolates", icon: <Gift className="w-5 h-5 text-amber-800" /> },
+  { emoji: "🍬", label: "Macarons", icon: <Cookie className="w-5 h-5 text-pink-300" /> },
   { emoji: "🧸", label: "Teddy Bear", icon: <Heart className="w-5 h-5 text-amber-600" /> },
   { emoji: "✨", label: "Lucky Star", icon: <Star className="w-5 h-5 text-yellow-400" /> },
+  { emoji: "🍵", label: "Green Tea", icon: <Coffee className="w-5 h-5 text-emerald-500" /> },
+  { emoji: "✉️", label: "Love Letter", icon: <Mail className="w-5 h-5 text-rose-300" /> },
+  { emoji: "🧣", label: "Warm Scarf", icon: <Sparkles className="w-5 h-5 text-blue-400" /> },
   { emoji: "👻", label: "Spooky Friend", icon: <Ghost className="w-5 h-5 text-slate-400" /> },
 ];
 
@@ -177,16 +183,14 @@ const Chat = () => {
 
     if (userMsgError) return;
 
-    // Calculate delay based on her current activity
     let initialDelay = 500;
     let typingDuration = Math.min(Math.max(text.length * 50, 1500), 4000);
 
     if (currentStatus.text === "In Class 🏫") {
-      // Significant delay to simulate waiting for the teacher to look away
-      initialDelay = Math.random() * 10000 + 5000; // 5-15 seconds
-      typingDuration += 2000; // Slower typing under the desk
+      initialDelay = Math.random() * 10000 + 5000;
+      typingDuration += 2000;
     } else if (currentStatus.text.includes("Sleeping")) {
-      initialDelay = Math.random() * 15000 + 10000; // 10-25 seconds to "wake up"
+      initialDelay = Math.random() * 15000 + 10000;
     }
 
     setTimeout(async () => {
@@ -343,8 +347,8 @@ const Chat = () => {
                 <Gift className="w-6 h-6" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-64 p-3 bg-white border-rose-100 rounded-2xl shadow-xl mb-2" side="top" align="start">
-              <div className="grid grid-cols-3 gap-2">
+            <PopoverContent className="w-72 p-3 bg-white border-rose-100 rounded-2xl shadow-xl mb-2" side="top" align="start">
+              <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
                 {GIFTS.map((gift) => (
                   <button
                     key={gift.label}
