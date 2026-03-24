@@ -54,6 +54,9 @@ const Login = () => {
                     inputBorder: '#1e293b',
                     inputBorderFocus: '#f43f5e',
                     inputBorderHover: '#334155',
+                    messageText: '#fb7185',
+                    messageBackground: 'rgba(244, 63, 94, 0.1)',
+                    messageBorder: 'rgba(244, 63, 94, 0.2)',
                   },
                   radii: {
                     borderRadiusButton: '12px',
@@ -67,7 +70,8 @@ const Login = () => {
                 label: 'text-slate-400 text-xs font-medium mb-1 block',
                 button: 'font-bold text-white transition-all active:scale-95 text-sm',
                 input: 'bg-white/5 border-white/10 text-white rounded-xl focus:ring-rose-500/50 text-sm',
-                message: 'text-xs text-rose-400 mt-1',
+                message: 'text-xs text-rose-400 mt-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-center',
+                anchor: 'text-rose-400 hover:text-rose-300 transition-colors text-xs font-medium',
               }
             }}
             providers={[]}
