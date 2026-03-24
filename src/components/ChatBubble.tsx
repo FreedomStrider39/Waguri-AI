@@ -18,16 +18,16 @@ const ChatBubble = ({ message, isUser, timestamp, status = 'read' }: ChatBubbleP
       isUser ? "justify-end" : "justify-start"
     )}>
       <div className={cn(
-        "max-w-[85%] px-4 py-2.5 rounded-2xl shadow-sm relative group",
+        "max-w-[85%] px-4 py-2.5 rounded-2xl shadow-lg relative group",
         isUser 
           ? "bg-rose-500 text-white rounded-tr-none" 
-          : "bg-white text-slate-800 rounded-tl-none border border-rose-100"
+          : "bg-[#1a1a1a] text-slate-200 rounded-tl-none border border-white/5"
       )}>
         <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message}</p>
         
         <div className={cn(
           "flex items-center mt-1 space-x-1 justify-end",
-          isUser ? "text-rose-100" : "text-slate-400"
+          isUser ? "text-rose-100" : "text-slate-500"
         )}>
           <span className="text-[10px] opacity-70">
             {timestamp}
@@ -37,7 +37,7 @@ const ChatBubble = ({ message, isUser, timestamp, status = 'read' }: ChatBubbleP
               {status === 'sending' && <div className="w-2 h-2 border-b border-white rounded-full animate-spin" />}
               {status === 'sent' && <Check className="w-3 h-3" />}
               {status === 'delivered' && <CheckCheck className="w-3 h-3" />}
-              {status === 'read' && <CheckCheck className="w-3 h-3 text-blue-300" />}
+              {status === 'read' && <CheckCheck className="w-3 h-3 text-rose-300" />}
             </span>
           )}
         </div>
@@ -47,7 +47,7 @@ const ChatBubble = ({ message, isUser, timestamp, status = 'read' }: ChatBubbleP
           "absolute top-0 w-2 h-2",
           isUser 
             ? "-right-1 bg-rose-500 [clip-path:polygon(0_0,0_100%,100%_0)]" 
-            : "-left-1 bg-white border-l border-t border-rose-100 [clip-path:polygon(0_0,100%_100%,100%_0)]"
+            : "-left-1 bg-[#1a1a1a] [clip-path:polygon(0_0,100%_100%,100%_0)]"
         )} />
       </div>
     </div>

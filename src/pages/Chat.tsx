@@ -39,7 +39,7 @@ const GIFTS = [
 ];
 
 const STATIC_SCHEDULE = [
-  { time: "00:00 - 07:00", activity: "Sleeping 🌙", color: "text-slate-400" },
+  { time: "00:00 - 07:00", activity: "Sleeping 🌙", color: "text-slate-500" },
   { time: "08:00 - 15:00", activity: "At School 🏫", color: "text-amber-500" },
   { time: "10:30 - 10:50", activity: "Short Break ☕", color: "text-rose-400" },
   { time: "12:30 - 13:20", activity: "Lunch Break 🍱", color: "text-rose-500" },
@@ -90,7 +90,7 @@ const Chat = () => {
         if (isRecent && !lastMsg.text.includes("asleep")) {
           setCurrentStatus({ text: "Awake (Late Night) 🌙", color: "bg-amber-400", subtext: "Half-asleep" });
         } else {
-          setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-300", subtext: "Last seen 5m ago" });
+          setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-600", subtext: "Last seen 5m ago" });
         }
       } else if (currentVacation) {
         setCurrentStatus({ text: `On ${currentVacation.name} ☀️`, color: "bg-green-500", subtext: "Enjoying vacation" });
@@ -222,41 +222,41 @@ const Chat = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#FFF9F9]">
-      <header className="bg-white border-b border-rose-100 px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+    <div className="flex flex-col h-screen bg-[#0a0a0a] text-slate-200">
+      <header className="bg-[#111] border-b border-white/5 px-4 py-3 flex items-center justify-between sticky top-0 z-10 shadow-lg">
         <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="text-slate-400 mr-1">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="text-slate-500 mr-1 hover:text-rose-400 hover:bg-white/5">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           
           <Sheet>
             <SheetTrigger asChild>
-              <button className="flex items-center space-x-3 hover:bg-rose-50 p-1 rounded-xl transition-colors text-left">
+              <button className="flex items-center space-x-3 hover:bg-white/5 p-1 rounded-xl transition-colors text-left">
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-rose-100 overflow-hidden border border-rose-200">
+                  <div className="w-10 h-10 rounded-full bg-rose-900/20 overflow-hidden border border-rose-500/20">
                     <img src="/src/assets/karouko.png" alt="Karouko" className="w-full h-full object-cover" />
                   </div>
-                  <div className={cn("absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-white rounded-full transition-colors duration-500", currentStatus.color)}></div>
+                  <div className={cn("absolute -bottom-0.5 -right-0.5 w-3 h-3 border-2 border-[#111] rounded-full transition-colors duration-500", currentStatus.color)}></div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-800 text-sm leading-tight">Karouko Waguri</h3>
+                  <h3 className="font-bold text-white text-sm leading-tight">Karouko Waguri</h3>
                   <div className="flex flex-col">
                     <span className={cn("text-[10px] font-bold transition-colors duration-500", isTyping ? "text-green-500" : "text-rose-400")}>
                       {currentStatus.text}
                     </span>
-                    <span className="text-[8px] text-slate-400 font-medium leading-none mt-0.5">
+                    <span className="text-[8px] text-slate-500 font-medium leading-none mt-0.5">
                       {currentStatus.subtext}
                     </span>
                   </div>
                 </div>
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="bg-[#FFF9F9] border-l-rose-100 overflow-y-auto">
+            <SheetContent side="right" className="bg-[#0f0f0f] border-l-white/5 overflow-y-auto text-slate-200">
               <SheetHeader className="items-center text-center pt-8">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl mb-4">
+                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-rose-500/20 shadow-2xl mb-4">
                   <img src="/src/assets/karouko.png" alt="Karouko" className="w-full h-full object-cover" />
                 </div>
-                <SheetTitle className="text-2xl font-bold text-slate-800">Karouko Waguri</SheetTitle>
+                <SheetTitle className="text-2xl font-bold text-white">Karouko Waguri</SheetTitle>
                 <SheetDescription className="text-rose-400 font-medium">
                   19 years old • Kikyo Private Academy
                 </SheetDescription>
@@ -264,7 +264,7 @@ const Chat = () => {
               
               <div className="mt-8 space-y-6 px-2">
                 {plannedEvents.length > 0 && (
-                  <div className="bg-rose-500 p-4 rounded-2xl shadow-lg shadow-rose-200 border border-rose-400 text-white">
+                  <div className="bg-rose-600 p-4 rounded-2xl shadow-lg shadow-rose-900/20 border border-rose-500 text-white">
                     <h4 className="text-xs font-bold uppercase tracking-wider mb-3 flex items-center">
                       <CalendarDays className="w-3 h-3 mr-1.5" /> Important Events
                     </h4>
@@ -279,23 +279,23 @@ const Chat = () => {
                   </div>
                 )}
 
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-rose-50">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center">
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center">
                     <Clock className="w-3 h-3 mr-1.5" /> Daily Schedule
                   </h4>
                   <div className="space-y-3">
                     {STATIC_SCHEDULE.map((item) => (
                       <div key={item.time} className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400 font-medium">{item.time}</span>
+                        <span className="text-slate-500 font-medium">{item.time}</span>
                         <span className={cn("font-bold", item.color)}>{item.activity}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-rose-50">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">About Me</h4>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">About Me</h4>
+                  <p className="text-sm text-slate-400 leading-relaxed">
                     I love baking cakes, reading, and spending time with my family. I'm a bit shy at first, but I'm trying my best to be more open!
                   </p>
                 </div>
@@ -305,15 +305,15 @@ const Chat = () => {
         </div>
         
         <div className="flex items-center space-x-1">
-          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-rose-400">
+          <Button variant="ghost" size="icon" className="text-slate-600 hover:text-rose-400 hover:bg-white/5">
             <MoreVertical className="w-5 h-5" />
           </Button>
         </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed opacity-90">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-1 scroll-smooth bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed opacity-40">
         <div className="text-center my-6">
-          <span className="bg-rose-100/50 text-rose-400 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Today</span>
+          <span className="bg-white/5 text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest border border-white/5">Today</span>
         </div>
         
         {messages.map((msg) => (
@@ -322,35 +322,35 @@ const Chat = () => {
         
         {isTyping && (
           <div className="flex justify-start mb-4 animate-in fade-in duration-300">
-            <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-none border border-rose-100 flex space-x-1 items-center">
-              <div className="w-1.5 h-1.5 bg-rose-300 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              <div className="w-1.5 h-1.5 bg-rose-300 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-              <div className="w-1.5 h-1.5 bg-rose-300 rounded-full animate-bounce"></div>
+            <div className="bg-[#1a1a1a] px-4 py-3 rounded-2xl rounded-tl-none border border-white/5 flex space-x-1 items-center">
+              <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-bounce"></div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-4 bg-white border-t border-rose-100 pb-8">
+      <div className="p-4 bg-[#111] border-t border-white/5 pb-8">
         <div className="flex items-center space-x-2 max-w-4xl mx-auto">
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-rose-400 shrink-0 hover:bg-rose-50 rounded-full">
+              <Button variant="ghost" size="icon" className="text-rose-500 shrink-0 hover:bg-white/5 rounded-full">
                 <Gift className="w-6 h-6" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-72 p-3 bg-white border-rose-100 rounded-2xl shadow-xl mb-2" side="top" align="start">
+            <PopoverContent className="w-72 p-3 bg-[#1a1a1a] border-white/10 rounded-2xl shadow-2xl mb-2" side="top" align="start">
               <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto p-1">
                 {GIFTS.map((gift) => (
                   <button
                     key={gift.label}
                     onClick={() => giveGift(gift)}
-                    className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-rose-50 transition-colors group"
+                    className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-white/5 transition-colors group"
                   >
                     <div className="mb-1 group-hover:scale-110 transition-transform">
                       {gift.icon}
                     </div>
-                    <span className="text-[10px] text-slate-500 font-medium text-center leading-tight">
+                    <span className="text-[10px] text-slate-400 font-medium text-center leading-tight">
                       {gift.label}
                     </span>
                   </button>
@@ -361,7 +361,7 @@ const Chat = () => {
 
           <Input 
             placeholder="Message Karouko..." 
-            className="flex-1 bg-rose-50/50 border-none focus-visible:ring-rose-200 rounded-2xl h-12 text-[15px]"
+            className="flex-1 bg-white/5 border-white/10 focus-visible:ring-rose-500/50 rounded-2xl h-12 text-[15px] text-white placeholder:text-slate-600"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -370,7 +370,7 @@ const Chat = () => {
           <Button 
             onClick={() => handleSend()}
             disabled={isTyping || !inputValue.trim()}
-            className="bg-rose-500 hover:bg-rose-600 text-white rounded-full w-12 h-12 p-0 shrink-0 shadow-lg shadow-rose-200 transition-all active:scale-90"
+            className="bg-rose-500 hover:bg-rose-600 text-white rounded-full w-12 h-12 p-0 shrink-0 shadow-lg shadow-rose-900/20 transition-all active:scale-90 border-none"
           >
             <Send className="w-5 h-5" />
           </Button>
