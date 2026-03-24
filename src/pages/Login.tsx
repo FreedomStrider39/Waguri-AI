@@ -39,8 +39,8 @@ const Login = () => {
                 },
                 radii: {
                   borderRadiusButton: '12px',
-                  buttonPadding: '12px',
-                  inputPadding: '12px',
+                  buttonBorderRadius: '12px',
+                  inputBorderRadius: '12px',
                 }
               }
             },
