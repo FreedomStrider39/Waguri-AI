@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost, Clock, CalendarDays, Trash2, Cookie, Mail, Sparkles, BookOpen } from 'lucide-react';
+import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost, Clock, CalendarDays, Trash2, Cookie, Mail, Sparkles, BookOpen, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
@@ -55,6 +55,7 @@ const Chat = () => {
   const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
   const [dailySchedule, setDailySchedule] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const checkVacation = () => {
     const now = new Date();
@@ -82,7 +83,7 @@ const Chat = () => {
         const lastMsg = messages[messages.length - 1];
         const isRecent = lastMsg && !lastMsg.isUser && (new Date().getTime() - new Date().getTime()) < 600000;
         
-        if (isRecent && !lastMsg.text.includes("asleep")) {
+        if (isRecent && !lastMsg.text?.includes("asleep")) {
           setCurrentStatus({ text: "Awake (Late Night) 🌙", color: "bg-amber-400", subtext: "Half-asleep" });
         } else {
           setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-600", subtext: "Last seen 5m ago" });
@@ -122,6 +123,7 @@ const Chat = () => {
         setMessages(msgData.map(m => ({
           id: m.id,
           text: m.text,
+          imageUrl: m.image_url,
           isUser: m.is_user,
           time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           status: m.status
@@ -147,6 +149,7 @@ const Chat = () => {
           return [...prev, {
             id: newMessage.id,
             text: newMessage.text,
+            imageUrl: newMessage.image_url,
             isUser: newMessage.is_user,
             time: new Date(newMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             status: newMessage.status
@@ -166,20 +169,20 @@ const Chat = () => {
     }
   }, [messages, isTyping]);
 
-  const handleSend = async (textOverride?: string) => {
+  const handleSend = async (textOverride?: string, imageUrl?: string) => {
     const text = textOverride || inputValue;
-    if (!text.trim() || isTyping) return;
+    if (!text.trim() && !imageUrl || isTyping) return;
 
     if (!textOverride) setInputValue("");
 
     const { error: userMsgError } = await supabase
       .from('messages')
-      .insert([{ text, is_user: true, status: 'sent' }]);
+      .insert([{ text: text || null, image_url: imageUrl || null, is_user: true, status: 'sent' }]);
 
     if (userMsgError) return;
 
     let initialDelay = 500;
-    let typingDuration = Math.min(Math.max(text.length * 50, 1500), 4000);
+    let typingDuration = Math.min(Math.max((text?.length || 20) * 50, 1500), 4000);
 
     if (currentStatus.text === "In Class 🏫") {
       initialDelay = Math.random() * 10000 + 5000;
@@ -196,7 +199,7 @@ const Chat = () => {
           const response = await fetch('https://ztnnmgnoschgreqsodfq.supabase.co/functions/v1/karouko-chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text })
+            body: JSON.stringify({ message: text, hasImage: !!imageUrl })
           });
 
           const data = await response.json();
@@ -208,6 +211,34 @@ const Chat = () => {
         }
       }, typingDuration);
     }, initialDelay);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const loadingToast = showSuccess("Uploading image...");
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('chat-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('chat-images')
+        .getPublicUrl(filePath);
+
+      handleSend("", publicUrl);
+    } catch (error: any) {
+      showError("Failed to upload image. Make sure 'chat-images' bucket exists.");
+      console.error(error);
+    }
   };
 
   const giveGift = (gift: typeof GIFTS[0]) => {
@@ -312,7 +343,7 @@ const Chat = () => {
         </div>
         
         {messages.map((msg) => (
-          <ChatBubble key={msg.id} message={msg.text} isUser={msg.isUser} timestamp={msg.time} status={msg.status} />
+          <ChatBubble key={msg.id} message={msg.text} imageUrl={msg.imageUrl} isUser={msg.isUser} timestamp={msg.time} status={msg.status} />
         ))}
         
         {isTyping && (
@@ -328,6 +359,23 @@ const Chat = () => {
 
       <div className="p-4 bg-[#111] border-t border-white/5 pb-8">
         <div className="flex items-center space-x-2 max-w-4xl mx-auto">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*" 
+            onChange={handleImageUpload}
+          />
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-slate-500 shrink-0 hover:bg-white/5 rounded-full"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <ImageIcon className="w-6 h-6" />
+          </Button>
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="text-rose-500 shrink-0 hover:bg-white/5 rounded-full">
@@ -364,7 +412,7 @@ const Chat = () => {
           />
           <Button 
             onClick={() => handleSend()}
-            disabled={isTyping || !inputValue.trim()}
+            disabled={isTyping || (!inputValue.trim() && !fileInputRef.current?.files?.length)}
             className="bg-rose-500 hover:bg-rose-600 text-white rounded-full w-12 h-12 p-0 shrink-0 shadow-lg shadow-rose-900/20 transition-all active:scale-90 border-none"
           >
             <Send className="w-5 h-5" />

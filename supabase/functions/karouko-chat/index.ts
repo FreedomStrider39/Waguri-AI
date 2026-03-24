@@ -33,7 +33,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
   try {
-    const { message } = await req.json()
+    const { message, hasImage } = await req.json()
     const now = new Date()
     const hour = now.getHours()
     const minute = now.getMinutes()
@@ -68,8 +68,20 @@ serve(async (req) => {
       }
     }
 
+    // Image Reaction Logic
+    if (hasImage) {
+      const imageReactions = [
+        "Oh! What a beautiful picture! Thank you for sharing this with me. 🌸",
+        "Wow, this is amazing... I feel like I'm right there with you! ✨",
+        "Hehe, I love seeing what you're up to. This made my day! 🥰",
+        "Is this for me? It's so pretty... I'm going to save it! 💖",
+        "You have such a good eye for photos! Thank you for showing me. ✨"
+      ];
+      reply = prefix + imageReactions[Math.floor(Math.random() * imageReactions.length)];
+    }
+
     // Gift Reaction Logic
-    if (message.includes("I brought you this:")) {
+    if (!reply && message?.includes("I brought you this:")) {
       const giftReactions = [
         "Oh! Is this for me? Thank you so much, it's beautiful! I'll treasure it. 💖",
         "Wow, you're so thoughtful... how did you know I'd love this? Hehe, thank you! ✨",
@@ -80,7 +92,7 @@ serve(async (req) => {
       reply = prefix + giftReactions[Math.floor(Math.random() * giftReactions.length)];
     }
 
-    // Personality Logic (if not a gift)
+    // Personality Logic (if not a gift or image)
     if (!reply) {
       const normalResponses = [
         "That's really interesting! I love hearing about your day. ✨",

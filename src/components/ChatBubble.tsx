@@ -5,28 +5,43 @@ import { cn } from "@/lib/utils";
 import { Check, CheckCheck } from 'lucide-react';
 
 interface ChatBubbleProps {
-  message: string;
+  message?: string;
+  imageUrl?: string;
   isUser: boolean;
   timestamp: string;
   status?: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
-const ChatBubble = ({ message, isUser, timestamp, status = 'read' }: ChatBubbleProps) => {
+const ChatBubble = ({ message, imageUrl, isUser, timestamp, status = 'read' }: ChatBubbleProps) => {
   return (
     <div className={cn(
       "flex w-full mb-4 animate-in fade-in slide-in-from-bottom-2 duration-300",
       isUser ? "justify-end" : "justify-start"
     )}>
       <div className={cn(
-        "max-w-[85%] px-4 py-2.5 rounded-2xl shadow-lg relative group",
+        "max-w-[85%] rounded-2xl shadow-lg relative group overflow-hidden",
         isUser 
           ? "bg-rose-500 text-white rounded-tr-none" 
           : "bg-[#1a1a1a] text-slate-200 rounded-tl-none border border-white/5"
       )}>
-        <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message}</p>
+        {imageUrl && (
+          <div className="p-1">
+            <img 
+              src={imageUrl} 
+              alt="Sent image" 
+              className="rounded-xl max-w-full h-auto object-cover max-h-64"
+            />
+          </div>
+        )}
+        
+        {message && (
+          <div className="px-4 py-2.5">
+            <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message}</p>
+          </div>
+        )}
         
         <div className={cn(
-          "flex items-center mt-1 space-x-1 justify-end",
+          "flex items-center px-4 pb-2 space-x-1 justify-end",
           isUser ? "text-rose-100" : "text-slate-500"
         )}>
           <span className="text-[10px] opacity-70">
