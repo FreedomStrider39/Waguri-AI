@@ -8,6 +8,7 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from '@/components/AuthProvider';
+import BlossomWhirl from '@/components/BlossomWhirl';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -39,9 +40,6 @@ const Index = () => {
     };
 
     fetchLastMessage();
-    
-    const timer = setTimeout(() => setIsLoading(false), 2000);
-    return () => clearTimeout(timer);
   }, [session]);
 
   const handleLogout = async () => {
@@ -53,46 +51,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 overflow-hidden relative">
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isLoading ? (
-          <motion.div 
-            key="loader"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.1 }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0a0a]"
-          >
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 1, ease: "easeOut" }}
-              className="relative"
-            >
-              <div className="w-24 h-24 rounded-full border-2 border-rose-500/20 flex items-center justify-center">
-                <Heart className="w-10 h-10 text-rose-500 fill-rose-500 animate-pulse" />
-              </div>
-              <motion.div 
-                className="absolute inset-0 rounded-full border-2 border-rose-500"
-                animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-              />
-            </motion.div>
-            <motion.p 
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="mt-6 text-rose-400 font-medium tracking-widest uppercase text-xs"
-            >
-              Connecting to Karouko...
-            </motion.p>
-          </motion.div>
+          <BlossomWhirl key="loader" onComplete={() => setIsLoading(false)} />
         ) : (
           <motion.div 
             key="content"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, ease: "easeOut" }}
             className="max-w-md w-full space-y-8 text-center z-10"
           >
             <div className="absolute top-4 right-4">
