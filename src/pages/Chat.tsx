@@ -42,7 +42,6 @@ const STATIC_SCHEDULE = [
   { time: "21:00 - 00:00", activity: "Relaxing ✨", color: "text-purple-500" },
 ];
 
-// French School Holidays 2024-2025 (Zone C)
 const VACATIONS = [
   { name: "Toussaint", start: new Date('2024-10-19'), end: new Date('2024-11-04') },
   { name: "Christmas", start: new Date('2024-12-21'), end: new Date('2025-01-06') },
@@ -65,7 +64,6 @@ const Chat = () => {
     return VACATIONS.find(v => now >= v.start && now <= v.end);
   };
 
-  // Dynamic Status Logic
   useEffect(() => {
     const updateStatus = () => {
       if (isTyping) {
@@ -179,9 +177,20 @@ const Chat = () => {
 
     if (userMsgError) return;
 
+    // Calculate delay based on her current activity
+    let initialDelay = 500;
+    let typingDuration = Math.min(Math.max(text.length * 50, 1500), 4000);
+
+    if (currentStatus.text === "In Class 🏫") {
+      // Significant delay to simulate waiting for the teacher to look away
+      initialDelay = Math.random() * 10000 + 5000; // 5-15 seconds
+      typingDuration += 2000; // Slower typing under the desk
+    } else if (currentStatus.text.includes("Sleeping")) {
+      initialDelay = Math.random() * 15000 + 10000; // 10-25 seconds to "wake up"
+    }
+
     setTimeout(async () => {
       setIsTyping(true);
-      const typingDuration = Math.min(Math.max(text.length * 50, 1500), 4000);
       
       setTimeout(async () => {
         try {
@@ -199,7 +208,7 @@ const Chat = () => {
           setIsTyping(false);
         }
       }, typingDuration);
-    }, 500);
+    }, initialDelay);
   };
 
   const giveGift = (gift: typeof GIFTS[0]) => {
