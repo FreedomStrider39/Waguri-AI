@@ -42,6 +42,15 @@ const STATIC_SCHEDULE = [
   { time: "21:00 - 00:00", activity: "Relaxing ✨", color: "text-purple-500" },
 ];
 
+// French School Holidays 2024-2025 (Zone C)
+const VACATIONS = [
+  { name: "Toussaint", start: new Date('2024-10-19'), end: new Date('2024-11-04') },
+  { name: "Christmas", start: new Date('2024-12-21'), end: new Date('2025-01-06') },
+  { name: "Winter Break", start: new Date('2025-02-15'), end: new Date('2025-03-03') },
+  { name: "Spring Break", start: new Date('2025-04-12'), end: new Date('2025-04-28') },
+  { name: "Summer Break", start: new Date('2025-07-05'), end: new Date('2025-09-01') },
+];
+
 const Chat = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<any[]>([]);
@@ -50,6 +59,11 @@ const Chat = () => {
   const [currentStatus, setCurrentStatus] = useState({ text: "Online", color: "bg-green-500", subtext: "Active now" });
   const [plannedEvents, setPlannedEvents] = useState<any[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const checkVacation = () => {
+    const now = new Date();
+    return VACATIONS.find(v => now >= v.start && now <= v.end);
+  };
 
   // Dynamic Status Logic
   useEffect(() => {
@@ -63,9 +77,9 @@ const Chat = () => {
       const hour = now.getHours();
       const minute = now.getMinutes();
       const timeValue = hour * 100 + minute;
+      const currentVacation = checkVacation();
 
       if (timeValue >= 0 && timeValue < 700) {
-        // Check if she sent a message recently (within last 10 mins) while "sleeping"
         const lastMsg = messages[messages.length - 1];
         const isRecent = lastMsg && !lastMsg.isUser && (new Date().getTime() - new Date().getTime()) < 600000;
         
@@ -74,6 +88,8 @@ const Chat = () => {
         } else {
           setCurrentStatus({ text: "Sleeping 🌙", color: "bg-slate-300", subtext: "Last seen 5m ago" });
         }
+      } else if (currentVacation) {
+        setCurrentStatus({ text: `On ${currentVacation.name} ☀️`, color: "bg-green-500", subtext: "Enjoying vacation" });
       } else if (timeValue >= 800 && timeValue < 1500) {
         if (timeValue >= 1030 && timeValue < 1050) {
           setCurrentStatus({ text: "On Break ☕", color: "bg-rose-400", subtext: "Quick reply" });
@@ -163,11 +179,8 @@ const Chat = () => {
 
     if (userMsgError) return;
 
-    // Simulate realistic thinking time
     setTimeout(async () => {
       setIsTyping(true);
-      
-      // Simulate typing duration based on message length
       const typingDuration = Math.min(Math.max(text.length * 50, 1500), 4000);
       
       setTimeout(async () => {
