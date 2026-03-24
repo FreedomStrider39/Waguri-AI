@@ -45,7 +45,7 @@ export const getDailySchedule = (date: Date) => {
   }
 
   const schoolEnd = school.end || 1600;
-  schedule.push({ time: `${Math.floor(schoolEnd/100)}:00 - 18:00`, activity: "Baking 🍰", color: "text-rose-500" });
+  schedule.push({ time: `${Math.floor(schoolEnd/100)}:00 - 18:00`, activity: "Reading 📚", color: "text-blue-400" });
   schedule.push({ time: "18:00 - 21:00", activity: "Studying 📖", color: "text-blue-500" });
   schedule.push({ time: "21:00 - 00:00", activity: "Relaxing ✨", color: "text-purple-500" });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost, Clock, CalendarDays, Trash2, Cookie, Mail, Sparkles } from 'lucide-react';
+import { Send, ArrowLeft, Cake, Info, MoreVertical, Heart, Bell, BellOff, Gift, Coffee, Flower2, Star, Ghost, Clock, CalendarDays, Trash2, Cookie, Mail, Sparkles, BookOpen } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ChatBubble from '@/components/ChatBubble';
@@ -25,8 +25,7 @@ import {
 } from "@/components/ui/popover";
 
 const GIFTS = [
-  { emoji: "🍰", label: "Strawberry Cake", icon: <Cake className="w-5 h-5 text-rose-400" /> },
-  { emoji: "🎂", label: "Chocolate Cake", icon: <Cake className="w-5 h-5 text-amber-900" /> },
+  { emoji: "📚", label: "New Novel", icon: <BookOpen className="w-5 h-5 text-blue-400" /> },
   { emoji: "🌹", label: "Red Roses", icon: <Flower2 className="w-5 h-5 text-red-500" /> },
   { emoji: "🌸", label: "Cherry Blossom", icon: <Flower2 className="w-5 h-5 text-pink-400" /> },
   { emoji: "🍫", label: "Chocolates", icon: <Gift className="w-5 h-5 text-amber-800" /> },
@@ -99,7 +98,7 @@ const Chat = () => {
           setCurrentStatus({ text: "In Class 🏫", color: "bg-amber-400", subtext: "Busy" });
         }
       } else if (timeValue >= (school.end || 1600) && timeValue < 1800) {
-        setCurrentStatus({ text: "Baking 🍰", color: "bg-green-500", subtext: "Active now" });
+        setCurrentStatus({ text: "Reading 📚", color: "bg-blue-400", subtext: "Active now" });
       } else if (timeValue >= 1800 && timeValue < 2100) {
         setCurrentStatus({ text: "Studying 📖", color: "bg-green-500", subtext: "Focused" });
       } else {
@@ -292,7 +291,7 @@ const Chat = () => {
                 <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
                   <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">About Me</h4>
                   <p className="text-sm text-slate-400 leading-relaxed">
-                    I love baking cakes, reading, and spending time with my family. I'm a bit shy at first, but I'm trying my best to be more open!
+                    I love reading, listening to music, and spending time with my family. I'm a bit shy at first, but I'm trying my best to be more open!
                   </p>
                 </div>
               </div>

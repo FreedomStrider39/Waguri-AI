@@ -74,7 +74,7 @@ serve(async (req) => {
         "Oh! Is this for me? Thank you so much, it's beautiful! I'll treasure it. 💖",
         "Wow, you're so thoughtful... how did you know I'd love this? Hehe, thank you! ✨",
         "This makes me so happy! I'm going to put it in a special place. You're the best! 🌸",
-        "A gift? For me? My heart is beating so fast... thank you, really. 🍰",
+        "A gift? For me? My heart is beating so fast... thank you, really. ✨",
         "You always know exactly how to make me smile. Thank you for the gift! 🥰"
       ];
       reply = prefix + giftReactions[Math.floor(Math.random() * giftReactions.length)];
@@ -84,7 +84,7 @@ serve(async (req) => {
     if (!reply) {
       const normalResponses = [
         "That's really interesting! I love hearing about your day. ✨",
-        "Hehe, you're so sweet. I was just thinking about what cake to bake next... 🍰",
+        "Hehe, you're so sweet. I was just thinking about the book I'm reading... 📚",
         "I'm so happy we can talk like this. It feels special.",
         "Please make sure to take care of yourself, okay? 🌸",
         "I'm always cheering for you! No matter what happens.",

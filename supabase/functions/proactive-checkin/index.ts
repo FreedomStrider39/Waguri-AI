@@ -45,7 +45,7 @@ serve(async (req) => {
     if (hour >= 7 && hour < 9) {
       reply = "Good morning! I just finished getting ready for school. I hope you have a wonderful day today! ✨";
     } else if (hour >= 16 && hour < 18) {
-      reply = "School is finally over! I'm heading home now... I'm thinking of stopping by the bakery. Do you want anything? 🍰";
+      reply = "School is finally over! I'm heading home now... I'm thinking of stopping by the library to find a new book. 📚";
     } else if (hour >= 21 && hour < 23) {
       reply = "I'm just about to head to bed... but I wanted to say goodnight first. Sleep well, okay? 🌙❤️";
     }
