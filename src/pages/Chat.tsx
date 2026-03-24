@@ -332,14 +332,6 @@ const Chat = () => {
       </div>
 
       <div className="p-4 bg-white border-t border-rose-100 pb-8">
-        {currentStatus.text.includes("Sleeping") || currentStatus.text.includes("Class") ? (
-          <div className="text-center mb-3 animate-pulse">
-            <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest">
-              Karouko is {currentStatus.text.toLowerCase()}... she might reply later.
-            </span>
-          </div>
-        ) : null}
-        
         <div className="flex items-center space-x-2 max-w-4xl mx-auto">
           <Popover>
             <PopoverTrigger asChild>
